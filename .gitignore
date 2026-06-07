@@ -5,4 +5,5 @@ xcuserdata/
 DerivedData/
 .swiftpm/
 *.xcodeproj
-Package.resolved
+# Package.resolved is committed: PrivacyLint is a distributable CLI (brew/mint),
+# so pinned dependency versions keep builds reproducible.
