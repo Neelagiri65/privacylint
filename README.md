@@ -1,20 +1,48 @@
 # PrivacyLint
 
-**ESLint for Apple's App Store privacy requirements.** A Swift CLI that scans
-your iOS/macOS Xcode project and reports what would block your next submission —
-before you hit submit.
+**Catch every App Store privacy rejection before you hit submit.** A Swift CLI
+that runs in your build or CI and tells you, in plain English with file and
+line numbers, what Apple's review will flag — Required Reason APIs without
+declared reasons, third-party SDKs missing privacy manifests, `PrivacyInfo.xcprivacy`
+mismatches, undeclared tracking domains, and AI service calls missing consent UI.
 
-> ⚠️ **Status: scaffold.** The architecture, models, CLI and rule tables are in
-> place; the scanning engine is being built step by step. Scanners currently
-> return "not yet implemented".
+Built for indie devs and small teams who don't have a compliance person and
+don't want to spend a week chasing an `ITMS-91053` rejection email.
 
-## Why
+> ⚠️ **Status: scaffold.** Architecture, models, CLI, file discovery, and rule
+> tables are wired end-to-end. Scanner implementations are landing one at a
+> time, test-first.
 
-In 2024 Apple reviewed 7.77 million submissions and rejected roughly 400,000 for
-privacy violations — the fastest-growing rejection category. The rules keep
-changing: Required Reason APIs, third-party SDK privacy manifests, tracking
-domain declarations, and — since November 2025 — AI service consent. PrivacyLint
-stays current so you don't get rejected for a rule that shipped last month.
+## Why this exists
+
+You hit submit. Three days later: `ITMS-91053: Missing API declaration`. Apple
+won't tell you which file. The API is buried in a transitive dependency of
+Firebase. You spend a weekend grepping. You resubmit. Three days later: another
+rejection, different code. This happens to roughly **400,000 submissions a
+year** — the fastest-growing rejection category, with new rules stacking up
+each year (manifests in 2024, AI consent in late 2025, age-rating changes in
+2025, mandatory Xcode 26 SDK in 2026).
+
+Existing tools either died after the May 2024 manifest deadline, work as
+grep-only weekend scripts, sell only to enterprises at enterprise prices, or
+check your App Store *listing* instead of your actual code. PrivacyLint reads
+the **source** — properly, with an AST so it can tell a comment from a real
+call — and stays current as Apple moves the goalposts.
+
+## Known limitations
+
+- **Objective-C source is collected but not parsed in v1.** SwiftSyntax is
+  Swift-only. If your project has `.m`/`.h` files that call Required Reason
+  APIs (e.g. `NSFileManager` timestamp queries), the v1 scanner will miss
+  them. A meaningful chunk of older iOS projects still mix Swift and ObjC;
+  treat the report as a Swift-only signal until v2 adds an ObjC sidecar.
+- **No semantic type resolution.** A user-defined `creationDate` property on
+  an unrelated type may be flagged the same way as `FileManager` access. False
+  positives are easier to dismiss than rejections; we err on the side of
+  surfacing more.
+- **No macro expansion.** Macro-emitted code is treated as the call site.
+- **`#if` branches are all scanned.** A Required Reason API gated behind
+  `#if DEBUG` is still reported.
 
 ## What it checks
 

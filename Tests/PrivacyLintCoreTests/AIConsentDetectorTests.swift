@@ -19,10 +19,13 @@ final class AIConsentDetectorTests: XCTestCase {
     }
 
     func testRegistrySkipsUnimplementedScanners() {
-        // During the scaffold phase every scanner throws notImplemented, so the
-        // run should complete with no outcomes rather than crashing.
+        // Scanners that still throw notImplemented are skipped; implemented
+        // ones (currently just RequiredReasonAPIScanner) produce an outcome.
+        // An empty ScanContext gives the implemented scanner zero files to
+        // walk, so it produces one passing outcome with no violations.
         let result = RuleRegistry().run(context)
-        XCTAssertTrue(result.outcomes.isEmpty)
+        XCTAssertEqual(result.outcomes.count, 1)
+        XCTAssertEqual(result.outcomes.first?.ruleIdentifier, "required-reason-api")
         XCTAssertTrue(result.passed)
     }
 }
