@@ -1,6 +1,6 @@
 # PrivacyLint — HANDOFF
 
-_Last updated: 2026-06-08 (v0.1.0 tagged, Homebrew formula drafted, awaiting tap publication)_
+_Last updated: 2026-06-08 (v0.1.0 tagged, Homebrew formula + ITMS-91053 blog post drafted; awaiting publication)_
 
 ## What this is
 A Swift CLI that scans iOS/macOS Xcode projects for App Store privacy
@@ -30,7 +30,8 @@ no competitor checks.
 - **`3c84cdb feat: CI exit codes — exit 1 on errors, --warnings-as-errors strict mode`** — unblocks the CI adoption path. Contract: errors → exit 1, warnings-only → exit 0 (non-strict CI keeps passing), `--warnings-as-errors` escalates warnings to failures. Decision logic is `ScanResult.exitCode(warningsAsErrors:)` — pure, unit-tested, the spec announced as the public contract for CI consumers. README adds copy-pasteable snippets for GitHub Actions, Xcode build phases, and pre-commit.
 - HTML reporter still a stub — parked per revised priority (post-launch nice-to-have).
 - **`8a648a2 release: v0.1.0 — first launchable version`** — CLI version bumped 0.0.1 → 0.1.0, tag `v0.1.0` created locally. Homebrew formula drafted at `dist/homebrew/privacylint.rb` with a non-trivial test block that creates a Required-Reason fixture, asserts scanner detection AND `ITMS-91053` in output AND non-zero exit. `dist/homebrew/README-tap.md` is the README the `homebrew-privacylint` tap repo will use. **`RELEASE.md`** is the full runbook: pre-flight gh commands to create both repos, tarball SHA hashing, tap-repo formula bump, smoke-install verification.
-- **Nothing pushed to GitHub yet.** Tag is local; no `origin` remote on this repo. The runbook in `RELEASE.md` has the gh commands ready — user runs them when ready to ship publicly.
+- **`aae0157 docs: draft ITMS-91053 blog post for nativerse-ventures.com`** — `dist/blog/itms-91053-missing-api-declaration.md`. ~1,300 words. Structured as the answer to a panic Google search: opens with the verbatim Apple rejection email, gives the complete manual fix (XML + reason-code table), then the three traps that defeat the manual fix (transitive deps / SDK manifests / wrong content), only THEN reveals PrivacyLint with verbatim CLI output from `/tmp/pl-itms-91053` and `/tmp/pl-firebase`. brew install one-liner + GitHub Actions snippet + the "report a missing SDK match" issue link. British English; senior-dev-to-peer tone; SEO keywords audited (`ITMS-91053` x10, `PrivacyInfo.xcprivacy` x8, `NSPrivacy*` x18, all natural). Ready to drop into the publishing pipeline alongside the tap publication.
+- **Nothing pushed to GitHub yet.** Tag is local; no `origin` remote on this repo. The runbook in `RELEASE.md` has the gh commands ready — user runs them when ready to ship publicly. Blog post is ready to publish the same hour the tap goes live.
 - `swift build` ✅ (release), `swift test` ✅ (119 tests).
 
 ## Project principles (load-bearing — apply to every scanner)
@@ -58,9 +59,9 @@ Tests/PrivacyLintCoreTests/ one test per scanner + registry tests
 ## NEXT
 **One push and one blog post from launchable.** The user runs the gh commands in `RELEASE.md` when ready — Claude has not pushed anything to GitHub. See `RELEASE.md` for verbatim commands.
 
-1. **Publish the tap** — `RELEASE.md` "Pre-flight" + "Cutting v0.1.0" sections. Creates `Neelagiri65/privacylint` (public), pushes everything, cuts the v0.1.0 release with `gh release create`, hashes the tarball, copies the formula into a new `Neelagiri65/homebrew-privacylint` repo, smoke-installs via `brew install`. Runbook is mechanical — review the gh commands first since they create public repos.
-2. **`ITMS-91053` blog post** — THIS is the real launch. Title for the panic search: "ITMS-91053: How to fix Missing API Declaration in your iOS app". Structure as the answer to a Google panic, not a product announcement. Solve the rejection first; reveal PrivacyLint as how to never see it again. Quote real CLI output verbatim. Include the "report a missing SDK match" link (Distribution / community principle below). Distribute on r/iOSProgramming, Indie Dev Monday, Swift Forums.
-3. **Show HN** — once the blog post is live and indexed. Pick one well-known open-source iOS app, run PrivacyLint, post the output. Lead with the most concrete finding.
+1. **Publish the tap** — `RELEASE.md` runbook. Creates `Neelagiri65/privacylint` + `Neelagiri65/homebrew-privacylint`, cuts v0.1.0, smoke-installs via `brew install`.
+2. **Publish the blog post** — drop `dist/blog/itms-91053-missing-api-declaration.md` into the nativerse-ventures.com pipeline the same hour the tap goes live. Distribute on r/iOSProgramming, Indie Dev Monday, Swift Forums.
+3. **Show HN** — once the blog post is indexed. Pick one well-known open-source iOS app, run PrivacyLint, post the output. Lead with the most concrete finding.
 4. **HTML reporter** — post-launch nice-to-have. Same data shape; standalone HTML; inline CSS; for CI artifact uploads.
 5. **`mint install`** — alternative install path; minor.
 6. **v2 — ASC integration** (`privacylint connect validate-against-asc`) — the subscription-justifying differentiator. Keychain entry `apple-app-store-connect`, keys at `~/.appstoreconnect/private_keys/`.
