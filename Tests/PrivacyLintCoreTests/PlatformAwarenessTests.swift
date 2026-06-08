@@ -79,11 +79,11 @@ struct PlatformAwarenessTests {
         let result = RuleRegistry().run(contextWith(platforms: []))
         let rra = result.outcomes.first { $0.ruleIdentifier == "required-reason-api" }
         #expect(rra?.status == .passed)
-        // Scaffolded scanners are visible as .notImplemented, not silently
-        // dropped. 4 of 5 scanners are now implemented; only AIConsentDetector
-        // remains scaffolded.
+        // All 5 scanners are implemented — none should appear as
+        // .notImplemented. This test will guard against accidental
+        // regression when a scanner gets re-stubbed.
         let nyi = result.outcomes.filter { $0.status == .notImplemented }
-        #expect(nyi.count == 1)
+        #expect(nyi.count == 0)
     }
 
     @Test func macCatalystCountsAsIOSFamily() {

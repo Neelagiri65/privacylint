@@ -58,6 +58,43 @@ and didn't check.
 `.xcodeproj` parsing is v2; if you scan a pure Xcode project today,
 detection falls back to "assume all platforms" with a one-line note.
 
+## AI consent detection — the differentiator
+
+Since November 2025, Apple has rejected apps that send user content to
+external AI/LLM services without an explicit in-app consent surface.
+The `ai-consent` scanner is the only one in the indie tool space that
+checks for this. It works in two steps:
+
+1. **Detects AI service usage** — static URL literals matching known
+   provider endpoints (`api.openai.com`, `api.anthropic.com`,
+   `api.mistral.ai`, `api.cohere.com`, Google AI's `*.googleapis.com`)
+   and `import OpenAI` / `import Anthropic` / etc.
+2. **Looks for a consent surface** — any identifier (variable, function,
+   type) whose camelCase components include BOTH an AI token (`ai`,
+   `openai`, `llm`, `gpt`, `claude`, `gemini`, `mistral`, `cohere`) and a
+   consent token (`consent`, `accept`, `agree`, `optin`, `permission`,
+   `allow`, `disclosure`). Or a string literal containing an AI provider
+   name AND a consent verb.
+
+If AI usage is found but no consent surface is detected, the scanner
+emits a **warning** — never an error — pointing at the first AI call
+and naming the providers. Severity is capped because static analysis
+cannot prove a consent UI is shown to the user *before* the call:
+false positives here would erode trust faster than a missed catch.
+
+If no AI usage is detected, the scanner short-circuits silently — your
+non-AI app isn't scrutinised for consent.
+
+**False-positive guards** built in:
+- `pairSelected` → not flagged (no AI token; "pair" ≠ AI)
+- `aiAvailable` → not flagged (no consent token)
+- `hasAcceptedTrackingConsent` → not flagged (this is ATT, not AI)
+
+**Out of scope (v1)**, documented honestly:
+- Runtime-constructed URLs (`base + "/openai"`, interpolated hosts).
+- Localised consent strings (keyword list is English-only).
+- Verifying the consent UI is actually shown before the first AI call.
+
 ## Tracking-domain detection — what we catch and what we don't
 
 The `tracking-domain-declaration` scanner reads your Swift source and flags
