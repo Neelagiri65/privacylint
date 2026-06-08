@@ -1,6 +1,6 @@
 # PrivacyLint — HANDOFF
 
-_Last updated: 2026-06-08 (post DependencyResolver)_
+_Last updated: 2026-06-08 (post TrackingDomainChecker)_
 
 ## What this is
 A Swift CLI that scans iOS/macOS Xcode projects for App Store privacy
@@ -15,17 +15,18 @@ no competitor checks.
 - Others (stelabouras, Wooder, techinpark, crasowas) = grep-based, stuck on May-2024 rules, unmaintained. Metadata scanners (AcceptMyApp etc.) don't read source.
 - **Risk:** if the rules engine isn't maintained monthly, the tool dies like the 2024 CLIs.
 
-## Current state — Steps 1-7 ✅ (scaffold, discovery, CLI, scanner #1, platform-aware, scanner #2, scanner #3)
+## Current state — Steps 1-8 ✅ (4 of 5 scanners shipped; only AIConsentDetector left)
 - `5e218c3` scaffold.
 - `f19e324` `ProjectDiscovery` — walks the project and classifies files. 11 tests.
 - `f82620b` CLI wired to discovery — `PrivacyLintCommand` passes populated `ScanContext` to `RuleRegistry`.
 - `16cb1f3 feat: implement RequiredReasonAPIScanner via SwiftSyntax AST` — first real scanner. Walks `MemberAccessExprSyntax` and `DeclReferenceExprSyntax`, indexes triggering symbols from `PrivacyLintRules.RequiredReasonAPIs`, reports `file:line:column` with ITMS-91053 messaging and actionable remediation citing approved reason codes. swift-syntax `"600.0.0"..<"604.0.0"` (resolves to 603.0.1).
 - **Platform-awareness** — `ApplePlatform` enum encodes the matrix: macOS is the sole exemption from Required-Reason API. `CheckStatus { passed, failed, skippedForPlatform, notImplemented }` makes the report honest. `PlatformDetector` uses `swift package describe --type json` (separate JSON-parsing entry point — direct shell-out from `swift test` deadlocks on the SPM build lock).
 - `922f7c5 feat: implement PrivacyManifestValidator (ITMS-91053 cross-check)` — turns code-level warnings into App Review `.error`s. Cross-references `PrivacyInfo.xcprivacy` against `RequiredReasonAPIScanner.detectUsage(in:)`. 13-row scenario matrix in tests. `PrivacyManifestParser` is a thin Foundation wrapper.
-- **`341ac94 feat: implement DependencyResolver (ITMS-91061 / Firebase→nanopb)`** — reads `Package.resolved` and `Podfile.lock`, cross-references each (transitive) dep against `ThirdPartySDKList`, checks the local checkout for `PrivacyInfo.xcprivacy`. Headline rejection caught: Firebase silent (has manifest), transitive nanopb flagged as ITMS-91061 (no manifest). applicablePlatforms = ALL (the SDK-manifest requirement applies on every distributed platform, including macOS — unlike Required-Reason API). 12-row scenario matrix in tests. SDK matcher normalises identities (strips `-ios-sdk`, `-ios-spm`, `-ios`, `-cocoa` but NOT `-swift` since names like `RealmSwift`/`RxSwift` embed it meaningfully).
-- Outstanding scanners (`.notImplemented`, visible in JSON): TrackingDomainChecker, AIConsentDetector.
+- `341ac94 feat: implement DependencyResolver (ITMS-91061 / Firebase→nanopb)` — reads `Package.resolved` and `Podfile.lock`, cross-references each (transitive) dep against `ThirdPartySDKList`, checks the local checkout for `PrivacyInfo.xcprivacy`. Firebase→nanopb headline rejection caught. applicablePlatforms = ALL. SDK matcher normalises identities (strips `-ios-sdk`/`-ios-spm`/`-ios`/`-cocoa` but NOT `-swift`).
+- **`7346423 feat: implement TrackingDomainChecker (static URL-literal scope)`** — AST walks for `StringLiteralExprSyntax`, extracts hosts via `URLComponents`, matches against `KnownTrackerDomains` (Meta, GA, Mixpanel, Amplitude, AppsFlyer, Adjust, Branch, Segment, Sentry, AppLovin, etc.), reconciles against `NSPrivacyTracking` + `NSPrivacyTrackingDomains`. Four end-to-end fixtures pass: no manifest → 1 summary error citing all networks; tracking=false → contradiction; partial declaration → cites the missing one specifically; full declaration → silent. 14-row matrix in tests. **README is explicit about scope** — static URL literals only; dynamic / interpolated / Info.plist / SDK-internal endpoints all documented as v1 not-yet, per the trust-by-honesty principle.
+- Outstanding: AIConsentDetector (the launch differentiator).
 - Reporters: JSON works; terminal/HTML still stubs.
-- `swift build` ✅, `swift test` ✅ (64 Swift Testing + XCTest layer all pass), end-to-end smoke at `/tmp/pl-firebase` confirms the Firebase→nanopb story works.
+- `swift build` ✅, `swift test` ✅ (84 Swift Testing + XCTest layer all pass).
 
 ## Project principles (load-bearing — apply to every scanner)
 - **Position naturally to Apple devs in pain.** Lead with the rejection code they Googled (`ITMS-91053`, `ITMS-91061`, `Guideline 5.1.1`). Name the likely culprit dependency when we know it. Give a fix-it line, not a diagnosis. Never use "compliance" where "what App Review will block" works.
@@ -50,10 +51,9 @@ Tests/PrivacyLintCoreTests/ one test per scanner + registry tests
 ```
 
 ## NEXT
-1. **TrackingDomainChecker** — find network calls to tracking domains not declared in `NSPrivacyTrackingDomains`. Applies to all platforms (including macOS). Source-level AST detection: `URLRequest(url: URL(string: "https://tracker.com/...")?)`, `URLSession.shared.dataTask(...)`, etc. The tracking-domain rule data should be a known-tracker list (CommonCrawl / EasyList style); seed with a representative set, refresh monthly.
-2. **AIConsentDetector** — the differentiator. Detect HTTP calls to OpenAI / Anthropic / Google AI / Cohere / Mistral endpoints and check whether a consent-modal surface is present in code. Mandatory since Nov 2025. Spec the matrix carefully — false positives here erode trust fastest.
-3. **Terminal + HTML reporters** — currently stubs (`"report not yet implemented"`); JSON works.
-4. **`ITMS-91053` + `ITMS-91061` blog posts** — both validators now produce quotable output with file:line + fix-it lines. Distribution play from the original brief.
+1. **AIConsentDetector** — the launch differentiator. Detect HTTP calls to OpenAI / Anthropic / Google AI / Cohere / Mistral endpoints (`AIServiceEndpoints` already seeded) and check whether a consent-surface is present in code (look for `ATTrackingManager.requestTrackingAuthorization` *plus* an in-app consent modal pattern; rule the latter via heuristics — naming conventions, sheet/alert APIs containing consent-related strings). Mandatory since Nov 2025. Spec the matrix carefully — false positives here erode trust fastest.
+2. **Terminal + HTML reporters** — currently stubs; JSON works.
+3. **`ITMS-91053` + `ITMS-91061` + (new) `tracking-domain` blog posts** — all three validators now produce quotable output. Distribution play from the original brief.
 
 ## Distribution / community notes
 - **`ITMS-91061` blog post** — include a "report a missing SDK match" link (GitHub issue template). The SDK matcher's normalisation rules (`-ios-sdk` strip, no `-swift` strip) will silently miss new naming conventions. Crowdsourced QA from rejected developers keeps the list accurate; we don't have to audit every new Pod ourselves.
