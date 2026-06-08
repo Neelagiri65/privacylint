@@ -27,7 +27,7 @@ public struct TerminalReporter: Reporter {
     private let useColour: Bool
     private let version: String
 
-    public init(useColour: Bool = true, version: String = "0.0.1") {
+    public init(useColour: Bool = true, version: String = "0.1.0") {
         self.useColour = useColour
         self.version = version
     }

@@ -16,7 +16,7 @@ struct PrivacyLintCommand: ParsableCommand {
         PrivacyInfo.xcprivacy declarations, tracking domains and AI service \
         consent — and reports what would block your next submission.
         """,
-        version: "0.0.1"
+        version: "0.1.0"
     )
 
     @Option(name: .shortAndLong, help: "Path to the Xcode project or Swift package to scan.")
