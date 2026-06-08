@@ -1,6 +1,33 @@
 # PrivacyLint — HANDOFF
 
-_Last updated: 2026-06-08 (LAUNCHED + IceCubesApp PR open at Dimillian/IceCubesApp#2471)_
+_Last updated: 2026-06-08 (session end — engine + tap + IceCubesApp PR live; blog/Reddit/Swift Forums/LinkedIn publication state unverified by Claude)_
+
+## Session end snapshot (2026-06-08)
+
+**Verified live (Claude executed these directly):**
+- Main repo: https://github.com/Neelagiri65/privacylint — `master @ ebc07a5`, tag `v0.1.0` pushed
+- GitHub release: https://github.com/Neelagiri65/privacylint/releases/tag/v0.1.0
+- Homebrew tap: https://github.com/Neelagiri65/homebrew-privacylint — Formula at `Formula/privacylint.rb` (sha256 `2d092c02aa0bb0c223c9463838535dda81c52b0f86528be78eae031f4598b2cd`)
+- Installed binary: `/opt/homebrew/bin/privacylint 0.1.0`
+- IceCubesApp PR: https://github.com/Dimillian/IceCubesApp/pull/2471 — OPEN, +24/-0, 0 comments at session end
+
+**User reported "done" but Claude did NOT verify URLs (paste failed / not provided):**
+- Blog post on nativerse-ventures.com — drafted at `dist/blog/itms-91053-missing-api-declaration.md`, copied to clipboard at end of session, user said "done" but did not paste the published URL back into the conversation. **Next session: verify the post is live; if so, capture the URL into this HANDOFF.**
+- Reddit (r/iOSProgramming) — same. Draft at `dist/launch/reddit-r-iOSProgramming.md`.
+- Swift Forums — same. Draft at `dist/launch/swift-forums-post.md`.
+- LinkedIn — same. Draft at `dist/launch/linkedin-post.md`.
+
+A turnkey helper script (`/tmp/publish-launch.sh <blog-url>`) was created to substitute the blog URL into Reddit/Swift Forums/LinkedIn drafts and open each submit page in sequence. The script lives on `/tmp` so will not survive a reboot; if needed, regenerate from the commit history (`git show ebc07a5`) or the source markdowns under `dist/launch/`.
+
+**Disk state:**
+- Main repo working tree: clean, pushed
+- Fork clone at `/tmp/pl-pr/IceCubesApp`: present, branch `add-privacy-manifest` at `6a87a8d5`, tracks `origin/add-privacy-manifest`. **Survives reboot but NOT a `/tmp` clean.** If gone, reclone from `https://github.com/Neelagiri65/IceCubesApp` (the fork remains regardless).
+- Fixture dirs `/tmp/pl-firebase`, `/tmp/pl-itms-91053`, `/tmp/pl-real-apps/IceCubesApp`: rebuildable from the relevant test inputs and the IceCubesApp clone command.
+
+**Verification at session end:**
+- `swift build` ✅, `swift test` ✅ (119 tests across 9 Swift Testing suites + XCTest layer)
+- `git status` clean, `git log origin/master..HEAD` empty (all pushed)
+- `gh pr view 2471 --repo Dimillian/IceCubesApp` returns `state: OPEN`
 
 ## What this is
 A Swift CLI that scans iOS/macOS Xcode projects for App Store privacy
@@ -64,22 +91,24 @@ Tests/PrivacyLintCoreTests/ one test per scanner + registry tests
 
 ## How to resume — first 60 seconds of next session
 
-1. `cd /Users/srinathprasannancs/devtools/privacylint && git log --oneline -5` — confirm last commit is the HANDOFF update committed at end of this session.
-2. `git status` — should be clean. Tree is in a publishable, stable state.
-3. Read this HANDOFF top-to-bottom. Specifically the **NEXT** list and the **IceCubesApp PR — drafted locally** bullet under Current state. The PR is the FIRST action; everything else flows from it.
-4. If `/tmp/pl-pr/IceCubesApp` still exists: `cd` there and follow the resume block in `dist/launch/icecubes-pr-draft.md`. If gone: re-clone the fork.
-5. `swift test` to confirm 119 tests still pass and nothing has rotted.
+1. `cd /Users/srinathprasannancs/devtools/privacylint && git log --oneline -5` — confirm `ebc07a5 docs(launch): add LinkedIn post draft` (or later) is the HEAD.
+2. `git status` — should be clean.
+3. Read the **Session end snapshot** block at the top of this HANDOFF. Specifically: do the four launch URLs exist? They were "user reported done" but never pasted. Verify each one is live; if so, edit the snapshot with the real URLs and commit.
+4. `gh pr view 2471 --repo Dimillian/IceCubesApp` — check whether Dimillian has commented / merged. If review comments are open, respond promptly (he's active).
+5. `swift test` — 119 tests should still pass.
+6. Read the **NEXT** list below to pick the highest-leverage action remaining.
 
 ## NEXT
 **One push and one blog post from launchable.** The user runs the gh commands in `RELEASE.md` when ready — Claude has not pushed anything to GitHub. See `RELEASE.md` for verbatim commands.
 
 1. ~~Publish the tap~~ ✅ done.
-2. ~~Push the IceCubesApp PR~~ ✅ done — https://github.com/Dimillian/IceCubesApp/pull/2471. Monitor for Dimillian's response; respond to review comments promptly (Dimillian is active). If merged, that's the public proof point ("PrivacyLint found a real issue, here's the merged fix") that goes in the Show HN post.
-3. **Publish the blog post** — drop `dist/blog/itms-91053-missing-api-declaration.md` into nativerse-ventures.com. Update `dist/launch/reddit-r-iOSProgramming.md`'s `[link once published]` placeholder. Update the same draft's IceCubes section to link the now-open PR URL.
-4. **Post Reddit + Swift Forums** — drafts in `dist/launch/`. r/iOSProgramming, r/IndieDevs / Indie Dev Monday, swift.org/forums. Lead with the IceCubesApp finding for credibility.
-5. **Show HN** — once the blog post has 24-48h on Reddit and the IceCubes PR has any movement.
-6. **v0.2.0 milestone** (per launch-advice feedback): "Reduced false positives on SwiftData `@Model` property declarations." The IceCubesApp false-positive cluster (14/19 warnings) is the motivator. Approach: extend `RequiredReasonAPIScanner` to recognise `@Model` / `@Attribute` annotation context and skip property declarations within those types. Tangible improvement to announce to the same audience.
-7. **Week-1 metrics to watch**: GitHub stars + "missing SDK match" issues filed. Everything else is noise.
+2. ~~Push the IceCubesApp PR~~ ✅ done — https://github.com/Dimillian/IceCubesApp/pull/2471.
+3. **Verify the four launch URLs and capture them** — user reported "done" at end of session but did not paste URLs. Check: nativerse-ventures.com for the blog post, r/iOSProgramming for the post, forums.swift.org for the new topic, linkedin.com/in/<your-handle>/recent-activity for the LinkedIn post. Edit the Session end snapshot in this HANDOFF with each real URL. If any did NOT actually publish: drafts are still on disk under `dist/blog/` and `dist/launch/`, helper script regeneratable.
+4. **Monitor IceCubesApp PR #2471** — respond to Dimillian's review comments quickly. If merged, edit the Reddit + LinkedIn posts to say "PR merged" (concrete proof point upgrade) and pin a comment on the Reddit thread linking the merged commit.
+5. **Show HN** — when the blog post has 24-48h on Reddit and the PR has movement. Lead with the most concrete artifact at that moment (merged PR > open PR > Reddit-thread response > blog views).
+6. **v0.2.0 milestone**: "Reduced false positives on SwiftData `@Model` property declarations." Motivator: the 14/19 IceCubesApp false-positive cluster. Approach: extend `RequiredReasonAPIScanner` to recognise `@Model` / `@Attribute` declaration context and skip property names within those types. Tangible improvement to announce to the launch audience.
+7. **Week-1 metrics to watch**: GitHub stars on `Neelagiri65/privacylint` + "missing SDK match" issues filed + IceCubesApp PR merge status. Everything else is noise.
+8. **v2 — ASC integration** (`privacylint connect validate-against-asc`) — the subscription-justifying differentiator. Don't pre-commit to scope; wait for week-1 feedback to choose between (a) per-Apple-ID declared-vs-actual diff, (b) multi-app dashboards, (c) Slack/webhook rejection alerts. Keychain entry `apple-app-store-connect`, keys at `~/.appstoreconnect/private_keys/`.
 4. **HTML reporter** — post-launch nice-to-have. Same data shape; standalone HTML; inline CSS; for CI artifact uploads.
 5. **`mint install`** — alternative install path; minor.
 6. **v2 — ASC integration** (`privacylint connect validate-against-asc`) — the subscription-justifying differentiator. Keychain entry `apple-app-store-connect`, keys at `~/.appstoreconnect/private_keys/`.
