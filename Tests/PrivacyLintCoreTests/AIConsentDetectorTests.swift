@@ -19,16 +19,16 @@ final class AIConsentDetectorTests: XCTestCase {
     }
 
     func testRegistryReportsEveryScannerStatus() {
-        // Honesty over invisibility: every registered scanner now appears in
-        // the result with its true status. The four still-scaffolded ones
-        // are .notImplemented; the implemented one is .passed (no files to
-        // walk, no violations).
+        // Every registered scanner appears in the result with its true
+        // status. notImplemented isn't a failure — it's informational.
         let result = RuleRegistry().run(context)
         XCTAssertEqual(result.outcomes.count, 5)
         let statuses = Dictionary(uniqueKeysWithValues: result.outcomes.map { ($0.ruleIdentifier, $0.status) })
         XCTAssertEqual(statuses["required-reason-api"], .passed)
+        XCTAssertEqual(statuses["privacy-manifest-validation"], .passed)
         XCTAssertEqual(statuses["ai-consent"], .notImplemented)
         XCTAssertEqual(statuses["third-party-sdk-manifest"], .notImplemented)
-        XCTAssertTrue(result.passed) // notImplemented isn't a failure
+        XCTAssertEqual(statuses["tracking-domain-declaration"], .notImplemented)
+        XCTAssertTrue(result.passed)
     }
 }

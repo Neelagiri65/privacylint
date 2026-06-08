@@ -23,6 +23,15 @@ public struct RequiredReasonAPIScanner: ComplianceScanner {
         Set(ApplePlatform.allCases.filter { $0.requiresRequiredReasonAPI })
     }
 
+    /// A single detected use of a Required-Reason API. Used by both this
+    /// scanner (to emit a warning Violation) and by `PrivacyManifestValidator`
+    /// (to cross-reference declared manifest entries against actual usage).
+    public struct CategoryUsage: Sendable, Equatable {
+        public let category: String
+        public let symbol: String
+        public let location: PrivacyLintCore.SourceLocation
+    }
+
     private let rules: [RequiredReasonAPI]
 
     public init(rules: [RequiredReasonAPI] = RequiredReasonAPIs.all) {
@@ -30,25 +39,52 @@ public struct RequiredReasonAPIScanner: ComplianceScanner {
     }
 
     public func scan(_ context: ScanContext) throws -> [Violation] {
-        var violations: [Violation] = []
+        let usage = try detectUsage(in: context)
+        return usage.map { hit in
+            let rule = rules.first { $0.category == hit.category }
+            let reasons = rule?.approvedReasons.joined(separator: ", ") ?? ""
+            return Violation(
+                ruleIdentifier: ruleIdentifier,
+                severity: .warning,
+                message: "Use of `\(hit.symbol)` triggers Apple's `\(hit.category)` requirement.",
+                location: hit.location,
+                remediation: "Declare one of [\(reasons)] for \(hit.category) in your PrivacyInfo.xcprivacy, or remove the call. Apple cites this in ITMS-91053 rejections."
+            )
+        }
+    }
+
+    /// Discover every Required-Reason API usage in the scan context — the
+    /// raw material the manifest validator needs in order to decide whether
+    /// declared reasons match real code.
+    public func detectUsage(in context: ScanContext) throws -> [CategoryUsage] {
+        var hits: [CategoryUsage] = []
         for url in context.sourceFiles {
             let source = try String(contentsOf: url, encoding: .utf8)
-            violations.append(contentsOf: scanSource(source, file: url))
+            hits.append(contentsOf: detectUsage(in: source, file: url))
         }
-        return violations
+        return hits
     }
 
     /// Test-friendly entry point. Skips IO so unit tests can feed a string.
     func scanSource(_ source: String, file: URL) -> [Violation] {
+        detectUsage(in: source, file: file).map { hit in
+            let rule = rules.first { $0.category == hit.category }
+            let reasons = rule?.approvedReasons.joined(separator: ", ") ?? ""
+            return Violation(
+                ruleIdentifier: ruleIdentifier,
+                severity: .warning,
+                message: "Use of `\(hit.symbol)` triggers Apple's `\(hit.category)` requirement.",
+                location: hit.location,
+                remediation: "Declare one of [\(reasons)] for \(hit.category) in your PrivacyInfo.xcprivacy, or remove the call. Apple cites this in ITMS-91053 rejections."
+            )
+        }
+    }
+
+    func detectUsage(in source: String, file: URL) -> [CategoryUsage] {
         let tree = Parser.parse(source: source)
-        let visitor = RequiredReasonVisitor(
-            file: file,
-            tree: tree,
-            rules: rules,
-            ruleIdentifier: ruleIdentifier
-        )
+        let visitor = RequiredReasonVisitor(file: file, tree: tree, rules: rules)
         visitor.walk(tree)
-        return visitor.violations
+        return visitor.hits
     }
 }
 
@@ -72,19 +108,12 @@ private final class RequiredReasonVisitor: SyntaxVisitor {
     private let file: URL
     private let converter: SourceLocationConverter
     private let index: RuleIndex
-    private let ruleIdentifier: String
-    var violations: [Violation] = []
+    var hits: [RequiredReasonAPIScanner.CategoryUsage] = []
 
-    init(
-        file: URL,
-        tree: SourceFileSyntax,
-        rules: [RequiredReasonAPI],
-        ruleIdentifier: String
-    ) {
+    init(file: URL, tree: SourceFileSyntax, rules: [RequiredReasonAPI]) {
         self.file = file
         self.converter = SourceLocationConverter(fileName: file.path, tree: tree)
         self.index = RuleIndex(rules)
-        self.ruleIdentifier = ruleIdentifier
         super.init(viewMode: .sourceAccurate)
     }
 
@@ -94,7 +123,7 @@ private final class RequiredReasonVisitor: SyntaxVisitor {
     override func visit(_ node: MemberAccessExprSyntax) -> SyntaxVisitorContinueKind {
         let name = node.declName.baseName.text
         if let rule = index.bySymbol[name] {
-            emit(rule: rule, symbol: name, at: Syntax(node.declName))
+            record(rule: rule, symbol: name, at: Syntax(node.declName))
         }
         return .visitChildren
     }
@@ -111,25 +140,22 @@ private final class RequiredReasonVisitor: SyntaxVisitor {
         }
         let name = node.baseName.text
         if let rule = index.bySymbol[name] {
-            emit(rule: rule, symbol: name, at: Syntax(node))
+            record(rule: rule, symbol: name, at: Syntax(node))
         }
         return .visitChildren
     }
 
-    private func emit(rule: RequiredReasonAPI, symbol: String, at node: Syntax) {
+    private func record(rule: RequiredReasonAPI, symbol: String, at node: Syntax) {
         let loc = node.startLocation(converter: converter)
-        let reasons = rule.approvedReasons.joined(separator: ", ")
-        violations.append(
-            Violation(
-                ruleIdentifier: ruleIdentifier,
-                severity: .warning,
-                message: "Use of `\(symbol)` triggers Apple's `\(rule.category)` requirement.",
+        hits.append(
+            RequiredReasonAPIScanner.CategoryUsage(
+                category: rule.category,
+                symbol: symbol,
                 location: PrivacyLintCore.SourceLocation(
                     file: file.path,
                     line: loc.line,
                     column: loc.column
-                ),
-                remediation: "Declare one of [\(reasons)] for \(rule.category) in your PrivacyInfo.xcprivacy, or remove the call. Apple cites this in ITMS-91053 rejections."
+                )
             )
         )
     }
