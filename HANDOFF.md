@@ -1,6 +1,6 @@
 # PrivacyLint — HANDOFF
 
-_Last updated: 2026-06-08 (CI exit codes shipped — CI adoption unblocked)_
+_Last updated: 2026-06-08 (v0.1.0 tagged, Homebrew formula drafted, awaiting tap publication)_
 
 ## What this is
 A Swift CLI that scans iOS/macOS Xcode projects for App Store privacy
@@ -29,7 +29,9 @@ no competitor checks.
 - `1e5f186 feat: implement TerminalReporter with ANSI colour and TTY detection` — hierarchical block-per-scanner layout; ANSI auto-disabled on non-TTY; `--no-color` flag; canonical `pathComponents` path-stripping with `/tmp ↔ /private/tmp` defence.
 - **`3c84cdb feat: CI exit codes — exit 1 on errors, --warnings-as-errors strict mode`** — unblocks the CI adoption path. Contract: errors → exit 1, warnings-only → exit 0 (non-strict CI keeps passing), `--warnings-as-errors` escalates warnings to failures. Decision logic is `ScanResult.exitCode(warningsAsErrors:)` — pure, unit-tested, the spec announced as the public contract for CI consumers. README adds copy-pasteable snippets for GitHub Actions, Xcode build phases, and pre-commit.
 - HTML reporter still a stub — parked per revised priority (post-launch nice-to-have).
-- `swift build` ✅, `swift test` ✅ (119 tests pass — 9 Swift Testing suites + XCTest layer).
+- **`8a648a2 release: v0.1.0 — first launchable version`** — CLI version bumped 0.0.1 → 0.1.0, tag `v0.1.0` created locally. Homebrew formula drafted at `dist/homebrew/privacylint.rb` with a non-trivial test block that creates a Required-Reason fixture, asserts scanner detection AND `ITMS-91053` in output AND non-zero exit. `dist/homebrew/README-tap.md` is the README the `homebrew-privacylint` tap repo will use. **`RELEASE.md`** is the full runbook: pre-flight gh commands to create both repos, tarball SHA hashing, tap-repo formula bump, smoke-install verification.
+- **Nothing pushed to GitHub yet.** Tag is local; no `origin` remote on this repo. The runbook in `RELEASE.md` has the gh commands ready — user runs them when ready to ship publicly.
+- `swift build` ✅ (release), `swift test` ✅ (119 tests).
 
 ## Project principles (load-bearing — apply to every scanner)
 - **Position naturally to Apple devs in pain.** Lead with the rejection code they Googled (`ITMS-91053`, `ITMS-91061`, `Guideline 5.1.1`). Name the likely culprit dependency when we know it. Give a fix-it line, not a diagnosis. Never use "compliance" where "what App Review will block" works.
@@ -53,15 +55,15 @@ Tests/PrivacyLintCoreTests/ one test per scanner + registry tests
 .github/workflows/ci.yml    build + test on macos-14
 ```
 
-## NEXT (revised priority — distribution over polish)
-The engine, reporter, and CI exit codes are done. **Two small tasks from launchable: brew tap + first blog post.** Don't let perfection delay distribution.
+## NEXT
+**One push and one blog post from launchable.** The user runs the gh commands in `RELEASE.md` when ready — Claude has not pushed anything to GitHub. See `RELEASE.md` for verbatim commands.
 
-1. **`brew tap nativerse/privacylint`** — unblocks frictionless install. Create a `homebrew-privacylint` repo, write `Formula/privacylint.rb` pointing at a v0.1.0 release tarball, tag v0.1.0 here first.
-2. **`ITMS-91053` blog post** — title and copy targeting the exact rejection email developers Google. Quote real PrivacyLint output verbatim. Include "report a missing SDK match" link per the principle below. Distribute on r/iOSProgramming, Indie Dev Monday, Swift Forums.
-3. **Show HN** — terminal reporter is screenshot-worthy. Pick one well-known open-source iOS app, run PrivacyLint, post the output. Lead with the nanopb ITMS-91061 find if it surfaces; otherwise the most concrete finding.
-4. **HTML reporter** — post-launch nice-to-have. Same data shape as JSON/terminal, standalone HTML page suitable for CI artifact uploads. Inline CSS only.
+1. **Publish the tap** — `RELEASE.md` "Pre-flight" + "Cutting v0.1.0" sections. Creates `Neelagiri65/privacylint` (public), pushes everything, cuts the v0.1.0 release with `gh release create`, hashes the tarball, copies the formula into a new `Neelagiri65/homebrew-privacylint` repo, smoke-installs via `brew install`. Runbook is mechanical — review the gh commands first since they create public repos.
+2. **`ITMS-91053` blog post** — THIS is the real launch. Title for the panic search: "ITMS-91053: How to fix Missing API Declaration in your iOS app". Structure as the answer to a Google panic, not a product announcement. Solve the rejection first; reveal PrivacyLint as how to never see it again. Quote real CLI output verbatim. Include the "report a missing SDK match" link (Distribution / community principle below). Distribute on r/iOSProgramming, Indie Dev Monday, Swift Forums.
+3. **Show HN** — once the blog post is live and indexed. Pick one well-known open-source iOS app, run PrivacyLint, post the output. Lead with the most concrete finding.
+4. **HTML reporter** — post-launch nice-to-have. Same data shape; standalone HTML; inline CSS; for CI artifact uploads.
 5. **`mint install`** — alternative install path; minor.
-6. **v2 — ASC integration** (`privacylint connect validate-against-asc`) — the subscription-justifying differentiator. Declared-vs-actual diff against App Store Connect's nutrition labels. Keychain entry `apple-app-store-connect`, keys at `~/.appstoreconnect/private_keys/`.
+6. **v2 — ASC integration** (`privacylint connect validate-against-asc`) — the subscription-justifying differentiator. Keychain entry `apple-app-store-connect`, keys at `~/.appstoreconnect/private_keys/`.
 
 ## Distribution / community notes
 - **`ITMS-91061` blog post** — include a "report a missing SDK match" link (GitHub issue template). The SDK matcher's normalisation rules (`-ios-sdk` strip, no `-swift` strip) will silently miss new naming conventions. Crowdsourced QA from rejected developers keeps the list accurate; we don't have to audit every new Pod ourselves.
