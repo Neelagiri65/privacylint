@@ -20,7 +20,7 @@ A few notes the Swift-tooling-focused crowd here might care about:
 
 **Reporter.** Honest `CheckStatus { passed, failed, skippedForPlatform, notImplemented }` so the JSON output lists every registered scanner with its true state — no silent drops. Terminal reporter does ANSI auto-detect via `isatty(fileno(stdout))`, `--no-color` for explicit override.
 
-**Smoke-tested on IceCubesApp** — found a missing `PrivacyInfo.xcprivacy` (would be an ITMS-91053 on next submission) and 19 file:line-pinned Required-Reason usages. Will send Dimillian a PR.
+**Smoke-tested on IceCubesApp** — found a missing `PrivacyInfo.xcprivacy` (would be an ITMS-91053 on next submission) and 19 file:line-pinned Required-Reason usages. Triaged 14 down to SwiftData `@Model` property-name false positives; the 2 real `UserDefaults` ones went into a [PR](https://github.com/Dimillian/IceCubesApp/pull/2471).
 
 **Install:**
 ```bash

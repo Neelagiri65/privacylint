@@ -36,7 +36,7 @@ Result: **1 ITMS-91053 blocking error + 19 Required-Reason warnings** across 12 
            above.
 ```
 
-I checked — there's no `PrivacyInfo.xcprivacy` anywhere in the IceCubesApp repo. Real finding. I'll open a PR.
+I checked — there's no `PrivacyInfo.xcprivacy` anywhere in the IceCubesApp repo. Real finding. [PR open here.](https://github.com/Dimillian/IceCubesApp/pull/2471)
 
 Honest caveat from the same run: some of the 19 Required-Reason warnings are `creationDate`/`modificationDate` on SwiftData `@Attribute` declarations, which v1 can't disambiguate from a real `URL.creationDate` call — semantic type resolution is on the v2 roadmap. Each one is flagged with file and line for review.
 
