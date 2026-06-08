@@ -26,8 +26,8 @@ final class AIConsentDetectorTests: XCTestCase {
         let statuses = Dictionary(uniqueKeysWithValues: result.outcomes.map { ($0.ruleIdentifier, $0.status) })
         XCTAssertEqual(statuses["required-reason-api"], .passed)
         XCTAssertEqual(statuses["privacy-manifest-validation"], .passed)
+        XCTAssertEqual(statuses["third-party-sdk-manifest"], .passed)
         XCTAssertEqual(statuses["ai-consent"], .notImplemented)
-        XCTAssertEqual(statuses["third-party-sdk-manifest"], .notImplemented)
         XCTAssertEqual(statuses["tracking-domain-declaration"], .notImplemented)
         XCTAssertTrue(result.passed)
     }
