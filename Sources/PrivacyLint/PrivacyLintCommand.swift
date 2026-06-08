@@ -28,10 +28,12 @@ struct PrivacyLintCommand: ParsableCommand {
     func run() throws {
         let projectURL = URL(fileURLWithPath: path, isDirectory: true)
 
-        // Discovery and analysis are implemented in later steps. For now the
-        // pipeline is wired end-to-end with an empty context so the architecture
-        // can be reviewed.
-        let context = ScanContext(projectPath: projectURL)
+        var isDir: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: projectURL.path, isDirectory: &isDir), isDir.boolValue else {
+            throw ValidationError("Path is not a directory: \(projectURL.path)")
+        }
+
+        let context = try ProjectDiscovery.discover(at: projectURL)
         let registry = RuleRegistry()
         let result = registry.run(context)
 
