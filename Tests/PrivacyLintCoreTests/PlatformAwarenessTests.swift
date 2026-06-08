@@ -80,11 +80,10 @@ struct PlatformAwarenessTests {
         let rra = result.outcomes.first { $0.ruleIdentifier == "required-reason-api" }
         #expect(rra?.status == .passed)
         // Scaffolded scanners are visible as .notImplemented, not silently
-        // dropped. Drops by one each time we ship a new scanner — currently
-        // 3 are implemented (RequiredReason, PrivacyManifestValidator,
-        // DependencyResolver) leaving TrackingDomainChecker + AIConsentDetector.
+        // dropped. 4 of 5 scanners are now implemented; only AIConsentDetector
+        // remains scaffolded.
         let nyi = result.outcomes.filter { $0.status == .notImplemented }
-        #expect(nyi.count == 2)
+        #expect(nyi.count == 1)
     }
 
     @Test func macCatalystCountsAsIOSFamily() {

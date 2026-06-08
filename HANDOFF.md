@@ -55,6 +55,9 @@ Tests/PrivacyLintCoreTests/ one test per scanner + registry tests
 3. **Terminal + HTML reporters** — currently stubs (`"report not yet implemented"`); JSON works.
 4. **`ITMS-91053` + `ITMS-91061` blog posts** — both validators now produce quotable output with file:line + fix-it lines. Distribution play from the original brief.
 
+## Distribution / community notes
+- **`ITMS-91061` blog post** — include a "report a missing SDK match" link (GitHub issue template). The SDK matcher's normalisation rules (`-ios-sdk` strip, no `-swift` strip) will silently miss new naming conventions. Crowdsourced QA from rejected developers keeps the list accurate; we don't have to audit every new Pod ourselves.
+
 ## v2 — parked features
 - **`privacylint connect validate --app-id XXXX`** (HEADLINE v2 differentiator). Uses fastlane / ASC API key (Keychain entry `apple-app-store-connect`, private keys at `~/.appstoreconnect/private_keys/`) to read the privacy nutrition labels you've already declared in App Store Connect, then diffs them against what the scanner actually found in code. Nobody does declared-vs-actual validation. This is the feature that justifies the subscription and the launch post. Park until the five core scanners and reporters are live.
 - **`privacylint connect replay-rejections`** — pulls last N rejections via ASC, surfaces ITMS codes, runs scanners scoped to those codes.

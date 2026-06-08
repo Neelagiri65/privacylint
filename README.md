@@ -58,6 +58,34 @@ and didn't check.
 `.xcodeproj` parsing is v2; if you scan a pure Xcode project today,
 detection falls back to "assume all platforms" with a one-line note.
 
+## Tracking-domain detection — what we catch and what we don't
+
+The `tracking-domain-declaration` scanner reads your Swift source and flags
+calls to known tracker hosts (Meta Pixel, Google Tag Manager, Mixpanel,
+Amplitude, AppsFlyer, Adjust, Branch, Segment, Sentry, AppLovin, and others)
+that aren't declared in your `NSPrivacyTrackingDomains`. **v1 catches:**
+
+- Static URL string literals: `URL(string: "https://facebook.com/tr/event")`
+- Bare hostname literals: `"facebook.com"`
+- Subdomain coverage by apex declarations (`connect.facebook.net` → `facebook.net`)
+- Both `NSPrivacyTracking=false` contradictions and undeclared-domain errors
+
+**v1 does NOT catch:**
+
+- **Runtime-constructed URLs:** `base + "/track"`, `"https://\(host)/event"`,
+  domains read from `Info.plist`, `.strings`, JSON config, or env vars. We
+  surface only what's statically visible in the AST.
+- **SDK-internal endpoints:** if your code calls `Analytics.log(...)` and the
+  SDK's own endpoint is set in its config, we won't find the domain — the
+  `DependencyResolver` scanner is the complement here (it flags the SDK
+  itself).
+- **Objective-C source.**
+
+Static-literal detection is genuinely useful (it catches most direct integrations
+of trackers via `URL(string:)`), but it is not exhaustive. Treat a green
+tracking-domain check as "no static reference found" rather than "your app
+makes no tracking calls." Runtime URL analysis is on the v2 roadmap.
+
 ## Known limitations
 
 - **Objective-C source is collected but not parsed in v1.** SwiftSyntax is

@@ -27,8 +27,8 @@ final class AIConsentDetectorTests: XCTestCase {
         XCTAssertEqual(statuses["required-reason-api"], .passed)
         XCTAssertEqual(statuses["privacy-manifest-validation"], .passed)
         XCTAssertEqual(statuses["third-party-sdk-manifest"], .passed)
+        XCTAssertEqual(statuses["tracking-domain-declaration"], .passed)
         XCTAssertEqual(statuses["ai-consent"], .notImplemented)
-        XCTAssertEqual(statuses["tracking-domain-declaration"], .notImplemented)
         XCTAssertTrue(result.passed)
     }
 }
