@@ -177,6 +177,54 @@ swift test
 swift run privacylint --path ./MyApp
 ```
 
+## CI integration
+
+PrivacyLint exits **1** when at least one `.error` violation is found (the
+rejection-class ones — `ITMS-91053`, `ITMS-91061`), and **0** otherwise.
+Drops straight into GitHub Actions / Xcode build phases / pre-commit hooks
+with no extra plumbing.
+
+### GitHub Actions
+
+```yaml
+- name: PrivacyLint
+  run: swift run privacylint --path . --format terminal
+```
+
+The job fails on errors and passes on warnings. Use `--warnings-as-errors`
+for strict mode where any finding fails the build:
+
+```yaml
+- name: PrivacyLint (strict)
+  run: swift run privacylint --path . --warnings-as-errors
+```
+
+### Xcode build phase
+
+Add a Run Script phase:
+
+```bash
+swift run --package-path "$PROJECT_DIR/.privacylint" privacylint --path "$PROJECT_DIR"
+```
+
+PrivacyLint emits Xcode-compatible `file:line:column` references, so each
+violation becomes a clickable warning/error in the Issue navigator.
+
+### Pre-commit hook
+
+```yaml
+- repo: local
+  hooks:
+    - id: privacylint
+      name: PrivacyLint
+      entry: swift run privacylint --path .
+      language: system
+      pass_filenames: false
+```
+
+ANSI colour is auto-disabled when stdout is not a TTY (your CI log won't
+fill with escape codes). Pass `--no-color` to force-disable.
+
 ## Installation (planned)
 
 ```bash

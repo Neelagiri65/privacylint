@@ -28,6 +28,9 @@ struct PrivacyLintCommand: ParsableCommand {
     @Flag(name: .long, help: "Disable ANSI colour in terminal output.")
     var noColor: Bool = false
 
+    @Flag(name: .long, help: "Treat warnings as errors — useful in strict CI configurations.")
+    var warningsAsErrors: Bool = false
+
     func run() throws {
         let projectURL = URL(fileURLWithPath: path, isDirectory: true)
 
@@ -68,5 +71,12 @@ struct PrivacyLintCommand: ParsableCommand {
         }
         let report = reporter.render(result)
         print(report)
+
+        // Drops straight into a GitHub Actions step / Xcode build phase /
+        // pre-commit hook without extra plumbing. Decision logic lives on
+        // ScanResult so it's unit-testable.
+        if result.exitCode(warningsAsErrors: warningsAsErrors) != 0 {
+            throw ExitCode.failure
+        }
     }
 }

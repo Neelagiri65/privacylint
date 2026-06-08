@@ -74,4 +74,15 @@ public struct ScanResult: Codable, Sendable {
 
     /// True when no check actively failed.
     public var passed: Bool { outcomes.allSatisfy(\.passed) }
+
+    /// The process exit code a CLI consumer should use. `1` when at least one
+    /// `.error` violation is present (rejection-class), or when
+    /// `warningsAsErrors` is set and there is at least one `.warning`. `0`
+    /// otherwise — including warnings-only runs without the flag, so existing
+    /// non-strict CI configurations don't suddenly start failing.
+    public func exitCode(warningsAsErrors: Bool = false) -> Int32 {
+        let hasErrors = allViolations.contains { $0.severity == .error }
+        let hasWarnings = allViolations.contains { $0.severity == .warning }
+        return (hasErrors || (warningsAsErrors && hasWarnings)) ? 1 : 0
+    }
 }
