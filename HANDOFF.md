@@ -1,6 +1,6 @@
 # PrivacyLint — HANDOFF
 
-_Last updated: 2026-06-08 (engine complete — all 5 scanners shipped)_
+_Last updated: 2026-06-08 (terminal reporter shipped — first usable UX surface)_
 
 ## What this is
 A Swift CLI that scans iOS/macOS Xcode projects for App Store privacy
@@ -25,8 +25,9 @@ no competitor checks.
 - `341ac94 feat: implement DependencyResolver (ITMS-91061 / Firebase→nanopb)` — reads `Package.resolved` and `Podfile.lock`, cross-references each (transitive) dep against `ThirdPartySDKList`, checks the local checkout for `PrivacyInfo.xcprivacy`. Firebase→nanopb headline rejection caught. applicablePlatforms = ALL. SDK matcher normalises identities (strips `-ios-sdk`/`-ios-spm`/`-ios`/`-cocoa` but NOT `-swift`).
 - `7346423 feat: implement TrackingDomainChecker (static URL-literal scope)` — AST walks for `StringLiteralExprSyntax`, matches against `KnownTrackerDomains` (Meta, GA, Mixpanel, Amplitude, AppsFlyer, etc.), reconciles against `NSPrivacyTracking` + `NSPrivacyTrackingDomains`. README explicit about static-only scope.
 - **`8c0c407 feat: implement AIConsentDetector (Nov 2025 launch differentiator)`** — the final scanner. Two AST passes: (1) AI usage via static URL literals matching `AIServiceEndpoints.hosts` + `import OpenAI/Anthropic/…` SDK imports; (2) consent surface via identifier-component matching (`hasAcceptedAIConsent` → splits to `[has, accepted, ai, consent]` → has both AI and consent tokens) or string literals with provider name + consent verb. Severity **capped at `.warning`** by design — static analysis can't prove the UI is actually shown before the call; false positives erode trust faster than misses. camelCase splitter handles acronym→word boundaries (`AIConsent`→`AI+Consent`) — caught during test pass. False-positive guards covered: `pairSelected`, `aiAvailable`, `hasAcceptedTrackingConsent` (ATT, not AI) all silent. End-to-end smoke: AI URL with no consent → warning citing OpenAI; AI URL + `hasAcceptedAIConsent` + `presentAIDisclosure` → silent.
-- **All 5 scanners ship.** `notImplemented` no longer appears in any JSON output. The terminal/HTML reporters are still stubs (`"report not yet implemented"`); JSON is real.
-- `swift build` ✅, `swift test` ✅ (104 Swift Testing + XCTest layer all pass).
+- **All 5 scanners ship.** `notImplemented` no longer appears in any JSON output.
+- **`1e5f186 feat: implement TerminalReporter with ANSI colour and TTY detection`** — replaces the "report not yet implemented" stub with a hierarchical block-per-scanner layout: badges (✓/✗/—), severity-coloured violations with `file:line:column`, wrapped messages, grey fix-it lines, summary footer with errors/warnings counts and the "App Review will block" postscript. Paths rendered relative to `ScanResult.projectPath` via canonical `pathComponents` comparison (same `/tmp ↔ /private/tmp` defence as `ProjectDiscovery`). ANSI auto-disabled when stdout is not a TTY; `--no-color` flag for explicit override. 9 reporter tests. HTML reporter still a stub.
+- `swift build` ✅, `swift test` ✅ (113 tests pass — 8 Swift Testing suites + XCTest layer).
 
 ## Project principles (load-bearing — apply to every scanner)
 - **Position naturally to Apple devs in pain.** Lead with the rejection code they Googled (`ITMS-91053`, `ITMS-91061`, `Guideline 5.1.1`). Name the likely culprit dependency when we know it. Give a fix-it line, not a diagnosis. Never use "compliance" where "what App Review will block" works.
@@ -53,12 +54,12 @@ Tests/PrivacyLintCoreTests/ one test per scanner + registry tests
 ## NEXT
 The engine is complete. Five scanners, four ITMS rejection codes covered (91053, 91061, 91065-adjacent, AI-consent guidance). Remaining work is shipping, polish, and distribution — not new scanner logic.
 
-1. **Terminal reporter** — currently `"report not yet implemented"`. Render the JSON shape as a coloured terminal report grouped by scanner, with `file:line:column` hyperlinks and a per-platform legend at the bottom.
-2. **HTML reporter** — same data, standalone HTML page suitable for sticking in CI artifacts. Inline CSS only; no external assets.
-3. **`brew install privacylint`** — Homebrew formula. The project Package.swift is already SPM-only and ships a single executable.
+1. **HTML reporter** — same data shape as JSON/terminal, standalone HTML page suitable for sticking in CI artifacts. Inline CSS only, no external assets.
+2. **CI exit codes** — currently the CLI always exits 0. Add: errors → exit 1, warnings-only → exit 0 (configurable via `--warnings-as-errors`).
+3. **`brew install privacylint`** — Homebrew formula. SPM-only, single executable, easy.
 4. **`mint install`** — alternative install path.
-5. **Distribution** — the three ITMS blog posts (91053 / 91061 / tracking-domain / AI-consent). The validators now produce quotable output with file:line + fix-it lines; reuse verbatim. Include the "report a missing SDK match" link (HANDOFF principle).
-6. **Show HN** — once the terminal reporter looks good and there's at least one real-app demo.
+5. **Distribution** — the four blog posts (ITMS-91053 / 91061 / tracking-domain / AI-consent). Reuse the validators' real output verbatim with file:line + fix-it lines. Include the "report a missing SDK match" link.
+6. **Show HN** — terminal reporter now produces a screenshot-worthy demo. Need one real-app run (open-source iOS app) before posting.
 7. **v2 — ASC integration** (`privacylint connect validate-against-asc`) — the subscription-justifying differentiator. Diffs declared privacy nutrition labels in App Store Connect against what the scanners found. Keychain entry `apple-app-store-connect`, keys at `~/.appstoreconnect/private_keys/`.
 
 ## Distribution / community notes
