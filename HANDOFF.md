@@ -1,6 +1,6 @@
 # PrivacyLint — HANDOFF
 
-_Last updated: 2026-06-08 (**LAUNCHED** — public repos, release, Homebrew tap, brew-installed binary, real-app finding all live)_
+_Last updated: 2026-06-08 (LAUNCHED + IceCubesApp PR drafted locally; PR push & open are the next session's first action)_
 
 ## What this is
 A Swift CLI that scans iOS/macOS Xcode projects for App Store privacy
@@ -37,7 +37,8 @@ no competitor checks.
   - `/opt/homebrew/bin/privacylint` — 0.1.0, exits 1 on errors as designed.
 - **Real-app finding on IceCubesApp** (Mastodon iOS, SwiftUI, popular open-source) — 1 ITMS-91053 blocking error (no PrivacyInfo.xcprivacy in the repo) + 19 Required-Reason warnings across 12 files. Captured to `dist/launch/icecubes-scan.txt`. Honest caveat: some `creationDate` warnings are SwiftData @Attribute false positives — documented in the Reddit post and the v2 roadmap.
 - **`b805684 docs(launch): real-app finding…`** — Reddit (r/iOSProgramming) and Swift Forums post drafts saved to `dist/launch/`. Blog post saved to `dist/blog/itms-91053-missing-api-declaration.md`.
-- **What Claude did NOT do**: publish the blog post to nativerse-ventures.com (no API access to your site); post on Reddit / Swift Forums (deliberately user-side — accounts, voice, response handling).
+- **IceCubesApp PR — drafted locally, NOT pushed/opened**. The fork exists publicly (`https://github.com/Neelagiri65/IceCubesApp`), the local commit `6a87a8d5` is on branch `add-privacy-manifest` at `/tmp/pl-pr/IceCubesApp` with the correct `PrivacyInfo.xcprivacy`. Triage was deliberate: only 2 of 19 PrivacyLint warnings were real (both `UserDefaults` in `UserPreferences.swift`); the 14 `creationDate` findings are confirmed SwiftData `@Model` property names — false positives documented in the PR body. PR body, manifest XML, exact resume commands all in `dist/launch/icecubes-pr-draft.md` and `dist/launch/icecubes-pr-body.md`.
+- **What Claude did NOT do**: publish the blog post to nativerse-ventures.com (no API access to your site); post on Reddit / Swift Forums (deliberately user-side — accounts, voice, response handling); push the IceCubesApp branch or open the PR (user signalled handoff before that visible action).
 
 ## Project principles (load-bearing — apply to every scanner)
 - **Position naturally to Apple devs in pain.** Lead with the rejection code they Googled (`ITMS-91053`, `ITMS-91061`, `Guideline 5.1.1`). Name the likely culprit dependency when we know it. Give a fix-it line, not a diagnosis. Never use "compliance" where "what App Review will block" works.
@@ -61,15 +62,24 @@ Tests/PrivacyLintCoreTests/ one test per scanner + registry tests
 .github/workflows/ci.yml    build + test on macos-14
 ```
 
+## How to resume — first 60 seconds of next session
+
+1. `cd /Users/srinathprasannancs/devtools/privacylint && git log --oneline -5` — confirm last commit is the HANDOFF update committed at end of this session.
+2. `git status` — should be clean. Tree is in a publishable, stable state.
+3. Read this HANDOFF top-to-bottom. Specifically the **NEXT** list and the **IceCubesApp PR — drafted locally** bullet under Current state. The PR is the FIRST action; everything else flows from it.
+4. If `/tmp/pl-pr/IceCubesApp` still exists: `cd` there and follow the resume block in `dist/launch/icecubes-pr-draft.md`. If gone: re-clone the fork.
+5. `swift test` to confirm 119 tests still pass and nothing has rotted.
+
 ## NEXT
 **One push and one blog post from launchable.** The user runs the gh commands in `RELEASE.md` when ready — Claude has not pushed anything to GitHub. See `RELEASE.md` for verbatim commands.
 
-1. ~~Publish the tap~~ ✅ done — https://github.com/Neelagiri65/privacylint and https://github.com/Neelagiri65/homebrew-privacylint live.
-2. **Publish the blog post** — drop `dist/blog/itms-91053-missing-api-declaration.md` into nativerse-ventures.com. Once URL is known, update the Reddit draft (`dist/launch/reddit-r-iOSProgramming.md`) where it says `[link once published]`.
-3. **Post Reddit + Swift Forums** — drafts in `dist/launch/`. r/iOSProgramming, r/IndieDevs / Indie Dev Monday, swift.org/forums. The IceCubesApp finding is the credibility hook — leads with a real rejection caught in a real app.
-4. **PR to IceCubesApp** maintainers — the missing `PrivacyInfo.xcprivacy` is a real submission-blocker for their next release. Filing the PR gives PrivacyLint a public reference proving a finding in a recognisable codebase.
-5. **Show HN** — once the blog post has 24-48h on Reddit. The terminal-output screenshot is the hook; PrivacyLint position is "indie dev tool, MIT, no telemetry, runs locally."
-6. **Week-1 metrics to watch (per launch advice)**: GitHub stars (social proof for Show HN) + "missing SDK match" issues filed (proves real developer usage). Everything else is noise.
+1. ~~Publish the tap~~ ✅ done.
+2. **Finalise + push the IceCubesApp PR** — local commit `6a87a8d5` on branch `add-privacy-manifest` in `/tmp/pl-pr/IceCubesApp`. The PR body lives at `dist/launch/icecubes-pr-body.md`; exact resume commands in `dist/launch/icecubes-pr-draft.md`. Review the manifest XML + PR body, then run the `git push` + `gh pr create` block from the draft doc. **Note**: `/tmp/pl-pr/IceCubesApp` is on /tmp — survives a reboot but not a /tmp clean. If gone, the fork at `Neelagiri65/IceCubesApp` is still there; reclone + recommit (PrivacyInfo.xcprivacy and commit message are reproducible from `dist/launch/icecubes-pr-draft.md`).
+3. **Publish the blog post** — drop `dist/blog/itms-91053-missing-api-declaration.md` into nativerse-ventures.com. Update `dist/launch/reddit-r-iOSProgramming.md`'s `[link once published]` placeholder. Update the same draft's IceCubes section to link the now-open PR URL.
+4. **Post Reddit + Swift Forums** — drafts in `dist/launch/`. r/iOSProgramming, r/IndieDevs / Indie Dev Monday, swift.org/forums. Lead with the IceCubesApp finding for credibility.
+5. **Show HN** — once the blog post has 24-48h on Reddit and the IceCubes PR has any movement.
+6. **v0.2.0 milestone** (per launch-advice feedback): "Reduced false positives on SwiftData `@Model` property declarations." The IceCubesApp false-positive cluster (14/19 warnings) is the motivator. Approach: extend `RequiredReasonAPIScanner` to recognise `@Model` / `@Attribute` annotation context and skip property declarations within those types. Tangible improvement to announce to the same audience.
+7. **Week-1 metrics to watch**: GitHub stars + "missing SDK match" issues filed. Everything else is noise.
 4. **HTML reporter** — post-launch nice-to-have. Same data shape; standalone HTML; inline CSS; for CI artifact uploads.
 5. **`mint install`** — alternative install path; minor.
 6. **v2 — ASC integration** (`privacylint connect validate-against-asc`) — the subscription-justifying differentiator. Keychain entry `apple-app-store-connect`, keys at `~/.appstoreconnect/private_keys/`.
