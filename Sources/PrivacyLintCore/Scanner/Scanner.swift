@@ -7,8 +7,12 @@ import Foundation
 public struct ScanContext: Sendable {
     /// The root of the project being scanned.
     public let projectPath: URL
-    /// Swift and Objective-C source files in scope (production targets only).
+    /// Swift source files in production targets.
     public let sourceFiles: [URL]
+    /// Swift source files in test targets (convention-based: directories matching `*Tests`).
+    public let testFiles: [URL]
+    /// Objective-C source files (`.m`, `.h`). Collected but not AST-parsed in v1.
+    public let objcFiles: [URL]
     /// `Package.swift` and `Podfile` manifests discovered in the project.
     public let dependencyManifests: [URL]
     /// `PrivacyInfo.xcprivacy` files discovered in the project.
@@ -17,11 +21,15 @@ public struct ScanContext: Sendable {
     public init(
         projectPath: URL,
         sourceFiles: [URL] = [],
+        testFiles: [URL] = [],
+        objcFiles: [URL] = [],
         dependencyManifests: [URL] = [],
         privacyManifests: [URL] = []
     ) {
         self.projectPath = projectPath
         self.sourceFiles = sourceFiles
+        self.testFiles = testFiles
+        self.objcFiles = objcFiles
         self.dependencyManifests = dependencyManifests
         self.privacyManifests = privacyManifests
     }
