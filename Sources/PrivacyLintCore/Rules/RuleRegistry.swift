@@ -22,34 +22,17 @@ public struct RuleRegistry {
         ]
     }
 
-    /// Run every registered scanner against the context and aggregate the result.
-    ///
-    /// Scanners that throw ``ScannerError/notImplemented`` are skipped during the
-    /// scaffold phase; once the engine is built this will surface real outcomes.
+    /// Run every registered scanner against the context and aggregate the
+    /// result. All status bookkeeping (platform skipping, not-implemented
+    /// fallback, thrown errors) is delegated to `ComplianceScanner.makeOutcome`
+    /// so the JSON output lists *every* registered check with its true status.
     public func run(_ context: ScanContext) -> ScanResult {
-        var outcomes: [CheckOutcome] = []
-        for scanner in scanners {
-            do {
-                outcomes.append(try scanner.makeOutcome(context))
-            } catch ScannerError.notImplemented {
-                continue
-            } catch {
-                outcomes.append(
-                    CheckOutcome(
-                        ruleIdentifier: scanner.ruleIdentifier,
-                        title: scanner.title,
-                        passed: false,
-                        violations: [
-                            Violation(
-                                ruleIdentifier: scanner.ruleIdentifier,
-                                severity: .error,
-                                message: "The check failed to run: \(error.localizedDescription)"
-                            )
-                        ]
-                    )
-                )
-            }
-        }
-        return ScanResult(projectPath: context.projectPath.path, outcomes: outcomes)
+        let outcomes = scanners.map { $0.makeOutcome(context) }
+        let detected = Array(context.platforms).sorted { $0.rawValue < $1.rawValue }
+        return ScanResult(
+            projectPath: context.projectPath.path,
+            detectedPlatforms: detected,
+            outcomes: outcomes
+        )
     }
 }

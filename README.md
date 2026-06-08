@@ -29,6 +29,35 @@ check your App Store *listing* instead of your actual code. PrivacyLint reads
 the **source** — properly, with an AST so it can tell a comment from a real
 call — and stays current as Apple moves the goalposts.
 
+## Platform-aware by design
+
+A macOS-only project doesn't need to declare Required-Reason API usage —
+Apple exempts macOS from that section. PrivacyLint reads your `Package.swift`
+(`swift package describe --type json`) to detect which Apple platforms you
+target, and **skips checks that don't apply**. The report says exactly which
+platforms each check was run for:
+
+```json
+{
+  "detectedPlatforms": ["macOS"],
+  "outcomes": [
+    { "ruleIdentifier": "required-reason-api",
+      "status": "skippedForPlatform",
+      "applicablePlatforms": ["iOS", "iPadOS", "macCatalyst", "tvOS", "visionOS", "watchOS"] },
+    ...
+  ]
+}
+```
+
+The four `CheckStatus` values — `passed`, `failed`, `skippedForPlatform`,
+`notImplemented` — exist so the report never silently drops a check. If
+something didn't run, you see why. The grep tools either flag macOS false
+positives or silently miss visionOS scope; PrivacyLint tells you what it did
+and didn't check.
+
+`.xcodeproj` parsing is v2; if you scan a pure Xcode project today,
+detection falls back to "assume all platforms" with a one-line note.
+
 ## Known limitations
 
 - **Objective-C source is collected but not parsed in v1.** SwiftSyntax is

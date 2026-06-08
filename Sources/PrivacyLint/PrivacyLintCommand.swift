@@ -33,7 +33,21 @@ struct PrivacyLintCommand: ParsableCommand {
             throw ValidationError("Path is not a directory: \(projectURL.path)")
         }
 
-        let context = try ProjectDiscovery.discover(at: projectURL)
+        let discovered = try ProjectDiscovery.discover(at: projectURL)
+        let detection = PlatformDetector.detect(at: projectURL)
+        let context = ScanContext(
+            projectPath: discovered.projectPath,
+            sourceFiles: discovered.sourceFiles,
+            testFiles: discovered.testFiles,
+            objcFiles: discovered.objcFiles,
+            dependencyManifests: discovered.dependencyManifests,
+            privacyManifests: discovered.privacyManifests,
+            platforms: detection.platforms
+        )
+        if !detection.note.isEmpty {
+            FileHandle.standardError.write(Data("note: \(detection.note)\n".utf8))
+        }
+
         let registry = RuleRegistry()
         let result = registry.run(context)
 

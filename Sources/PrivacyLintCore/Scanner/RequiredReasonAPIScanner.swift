@@ -15,6 +15,14 @@ public struct RequiredReasonAPIScanner: ComplianceScanner {
     public let ruleIdentifier = "required-reason-api"
     public let title = "Required Reason API usage"
 
+    /// macOS is exempt from Required-Reason API declarations (Apple, Privacy
+    /// manifest files). Running this scanner on a macOS-only project would
+    /// generate the same false positives that plague every grep-based tool —
+    /// so we don't run it there.
+    public var applicablePlatforms: Set<ApplePlatform> {
+        Set(ApplePlatform.allCases.filter { $0.requiresRequiredReasonAPI })
+    }
+
     private let rules: [RequiredReasonAPI]
 
     public init(rules: [RequiredReasonAPI] = RequiredReasonAPIs.all) {

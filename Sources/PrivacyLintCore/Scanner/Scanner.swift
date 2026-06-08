@@ -1,9 +1,6 @@
 import Foundation
 
-/// The shared context handed to every ``Scanner`` for a single run.
-///
-/// The discovery logic that populates the file lists is implemented in a later
-/// step; this type defines the contract the scanners depend on.
+/// The shared context handed to every ``ComplianceScanner`` for a single run.
 public struct ScanContext: Sendable {
     /// The root of the project being scanned.
     public let projectPath: URL
@@ -17,6 +14,11 @@ public struct ScanContext: Sendable {
     public let dependencyManifests: [URL]
     /// `PrivacyInfo.xcprivacy` files discovered in the project.
     public let privacyManifests: [URL]
+    /// The Apple platforms this project targets. Empty means "unknown — assume
+    /// every platform applies." Conservative on purpose: under-scanning is
+    /// worse than over-scanning since false positives are dismissable and
+    /// missed checks become App Store rejections.
+    public let platforms: Set<ApplePlatform>
 
     public init(
         projectPath: URL,
@@ -24,7 +26,8 @@ public struct ScanContext: Sendable {
         testFiles: [URL] = [],
         objcFiles: [URL] = [],
         dependencyManifests: [URL] = [],
-        privacyManifests: [URL] = []
+        privacyManifests: [URL] = [],
+        platforms: Set<ApplePlatform> = []
     ) {
         self.projectPath = projectPath
         self.sourceFiles = sourceFiles
@@ -32,6 +35,7 @@ public struct ScanContext: Sendable {
         self.objcFiles = objcFiles
         self.dependencyManifests = dependencyManifests
         self.privacyManifests = privacyManifests
+        self.platforms = platforms
     }
 }
 
@@ -43,21 +47,71 @@ public protocol ComplianceScanner: Sendable {
     var ruleIdentifier: String { get }
     /// A short, human-readable title (British English).
     var title: String { get }
+    /// The platforms this check applies to. Default: every platform — most
+    /// privacy rules (tracking, collected data, manifest presence) apply
+    /// across the board. Scanners with narrower scope (e.g. Required-Reason
+    /// API which exempts macOS) override this.
+    var applicablePlatforms: Set<ApplePlatform> { get }
     /// Run the check and return any violations found.
     func scan(_ context: ScanContext) throws -> [Violation]
 }
 
 public extension ComplianceScanner {
-    /// Convenience wrapper that packages this scanner's findings into a ``CheckOutcome``.
-    func makeOutcome(_ context: ScanContext) throws -> CheckOutcome {
-        let violations = try scan(context)
-        let blocking = violations.contains { $0.severity == .error }
-        return CheckOutcome(
-            ruleIdentifier: ruleIdentifier,
-            title: title,
-            passed: !blocking,
-            violations: violations
-        )
+    var applicablePlatforms: Set<ApplePlatform> { Set(ApplePlatform.allCases) }
+
+    /// Whether this scanner has any relevance to the project's detected
+    /// platforms. Empty `context.platforms` means "unknown → assume all"
+    /// and the scanner runs.
+    func isApplicable(to context: ScanContext) -> Bool {
+        guard !context.platforms.isEmpty else { return true }
+        return !applicablePlatforms.isDisjoint(with: context.platforms)
+    }
+
+    /// Convenience wrapper that packages this scanner's findings into a
+    /// ``CheckOutcome``, honouring platform-applicability and the
+    /// `notImplemented` opt-out.
+    func makeOutcome(_ context: ScanContext) -> CheckOutcome {
+        let applicableList = Array(applicablePlatforms).sorted { $0.rawValue < $1.rawValue }
+        guard isApplicable(to: context) else {
+            return CheckOutcome(
+                ruleIdentifier: ruleIdentifier,
+                title: title,
+                status: .skippedForPlatform,
+                applicablePlatforms: applicableList
+            )
+        }
+        do {
+            let violations = try scan(context)
+            let blocking = violations.contains { $0.severity == .error }
+            return CheckOutcome(
+                ruleIdentifier: ruleIdentifier,
+                title: title,
+                status: blocking ? .failed : .passed,
+                applicablePlatforms: applicableList,
+                violations: violations
+            )
+        } catch ScannerError.notImplemented {
+            return CheckOutcome(
+                ruleIdentifier: ruleIdentifier,
+                title: title,
+                status: .notImplemented,
+                applicablePlatforms: applicableList
+            )
+        } catch {
+            return CheckOutcome(
+                ruleIdentifier: ruleIdentifier,
+                title: title,
+                status: .failed,
+                applicablePlatforms: applicableList,
+                violations: [
+                    Violation(
+                        ruleIdentifier: ruleIdentifier,
+                        severity: .error,
+                        message: "The check failed to run: \(error.localizedDescription)"
+                    )
+                ]
+            )
+        }
     }
 }
 
