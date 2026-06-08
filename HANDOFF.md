@@ -1,6 +1,6 @@
 # PrivacyLint — HANDOFF
 
-_Last updated: 2026-06-08 (post file-discovery)_
+_Last updated: 2026-06-08 (post RequiredReasonAPIScanner)_
 
 ## What this is
 A Swift CLI that scans iOS/macOS Xcode projects for App Store privacy
@@ -15,13 +15,20 @@ no competitor checks.
 - Others (stelabouras, Wooder, techinpark, crasowas) = grep-based, stuck on May-2024 rules, unmaintained. Metadata scanners (AcceptMyApp etc.) don't read source.
 - **Risk:** if the rules engine isn't maintained monthly, the tool dies like the 2024 CLIs.
 
-## Current state — Step 1 (scaffold) ✅, Step 2 (file discovery) ✅, Step 3 (CLI wired) ✅
-- `5e218c3` scaffold (27 files).
-- `f19e324 feat: add ProjectDiscovery to populate ScanContext` — directory walker that classifies Swift production / Swift test (convention: `*Tests`, `*UITests`) / Objective-C / dependency manifests / `PrivacyInfo.xcprivacy`. Excludes `.build`, `DerivedData`, `Pods`, `Carthage`, `.git`, `.swiftpm`, `.claude`, `fastlane`, `website`, `*.xcodeproj`, `*.xcworkspace`. `ScanContext` extended with `testFiles` and `objcFiles`. 11 tests, all pass.
-- Gotcha fixed mid-session: original exclusion logic used `firstComponent` of a string-subtracted relative path. macOS `/var/folders/...` ↔ `/private/var/folders/...` symlink meant the subtraction produced wrong components and `.build`/`Pods` leaked through. Fixed by resolving symlinks + comparing every component, not just the first.
-- `f82620b feat: wire ProjectDiscovery into PrivacyLintCommand` — CLI now passes a populated `ScanContext` to `RuleRegistry`. Guards non-directory `--path` with `ValidationError`.
-- `swift build` ✅ (Swift 6.3.2), `swift test` ✅ (all suites pass), `swift run privacylint --path . --format terminal` ✅.
-- Scanner logic still **not** implemented — every scanner throws `ScannerError.notImplemented`; pipeline runs end-to-end with empty output but now over real discovered files.
+## Current state — Steps 1-4 ✅ (scaffold, discovery, CLI, FIRST SCANNER)
+- `5e218c3` scaffold.
+- `f19e324` `ProjectDiscovery` — walks the project and classifies files. 11 tests.
+- `f82620b` CLI wired to discovery — `PrivacyLintCommand` passes populated `ScanContext` to `RuleRegistry`.
+- `16cb1f3 feat: implement RequiredReasonAPIScanner via SwiftSyntax AST` — **first real scanner shipped**. Walks `MemberAccessExprSyntax` and `DeclReferenceExprSyntax`, indexes triggering symbols from `PrivacyLintRules.RequiredReasonAPIs`, reports `file:line:column` with ITMS-91053 messaging and actionable remediation citing approved reason codes. swift-syntax dep bumped from `>= 510.0.0` to `"600.0.0"..<"604.0.0"` (resolves to 603.0.1, Swift 6.3 / Xcode 26). 9 scanner tests pass; end-to-end smoke against a synthetic project at `/tmp/pl-demo` finds both expected violations.
+- Outstanding scanners (still throw `notImplemented`): DependencyResolver, PrivacyManifestValidator, TrackingDomainChecker, AIConsentDetector.
+- Reporters: JSON works (real, used by smoke); terminal/HTML still stubs (`"report not yet implemented"`).
+- `swift build` ✅, `swift test` ✅ (20 Swift Testing + 5 XCTest suites all pass), `swift run privacylint --path /tmp/pl-demo --format json` ✅ (returns valid violation JSON).
+
+## Project principles (load-bearing — apply to every scanner)
+- **Position naturally to Apple devs in pain.** Lead with the rejection code they Googled (`ITMS-91053`, `ITMS-91061`, `Guideline 5.1.1`). Name the likely culprit dependency when we know it. Give a fix-it line, not a diagnosis. Never use "compliance" where "what App Review will block" works.
+- **Consider every plausible scenario before declaring a scanner done.** Each scanner must have a scenario matrix at the top of its test file (see `RequiredReasonAPIScannerTests` and the matrix in `docs/research-swiftsyntax.md`). The matrix is the spec; if a row isn't tested, the scanner isn't done.
+- **British English** in all user-facing strings.
+- **No CoreData, no Firebase, SPM-only, MIT.**
 
 ## Key decisions made
 - Protocol renamed `Scanner` → **`ComplianceScanner`** to avoid colliding with `Foundation.Scanner` (a real class). Important — keep this name.
@@ -40,10 +47,12 @@ Tests/PrivacyLintCoreTests/ one test per scanner + registry tests
 ```
 
 ## NEXT
-1. **User reviews the architecture** before engine work begins (explicitly requested).
-2. Before any AST code: run `/research-first` on the SwiftSyntax API (per session rules).
-3. Build scanners in order, each test-first: RequiredReasonAPIScanner (SwiftSyntax visitor → detect triggering symbols, ignore comments/test targets) → DependencyResolver (parse Package.swift/Podfile → cross-ref ThirdPartySDKList) → PrivacyManifestValidator (parse `.xcprivacy` plist → reconcile reasons vs usage) → TrackingDomainChecker → AIConsentDetector.
-4. Implement terminal/HTML reporters (currently placeholder; JSON is real).
+1. **PrivacyManifestValidator** — parse `.xcprivacy` plist, reconcile declared reasons against what `RequiredReasonAPIScanner` actually found (this is where we go from `.warning` to `.error` when a usage has no declared reason → ITMS-91053). Write the matrix first.
+2. **DependencyResolver** — parse `Package.swift` + `Podfile`, cross-reference against `ThirdPartySDKList`. The "Firebase pulls in nanopb without a manifest" story is the headline. Complete the SDK list when implementing.
+3. **TrackingDomainChecker** — find network calls to tracking domains not declared in `NSPrivacyTrackingDomains`.
+4. **AIConsentDetector** — the differentiator. Detect calls to OpenAI / Anthropic / Google AI endpoints and check for a consent-modal surface. Spec the matrix carefully.
+5. **Terminal + HTML reporters** — currently stubs (`"report not yet implemented"`); JSON works.
+6. **`ITMS-91053` blog post + ITMS-91061** — distribution play from the original brief.
 
 ## Notes / open items
 - No git remote yet — commits are local only. Add a remote before relying on push.
