@@ -25,6 +25,9 @@ struct PrivacyLintCommand: ParsableCommand {
     @Option(name: .shortAndLong, help: "Output format: terminal, json or html.")
     var format: OutputFormat = .terminal
 
+    @Flag(name: .long, help: "Disable ANSI colour in terminal output.")
+    var noColor: Bool = false
+
     func run() throws {
         let projectURL = URL(fileURLWithPath: path, isDirectory: true)
 
@@ -51,7 +54,19 @@ struct PrivacyLintCommand: ParsableCommand {
         let registry = RuleRegistry()
         let result = registry.run(context)
 
-        let report = format.reporter.render(result)
+        let reporter: Reporter
+        switch format {
+        case .terminal:
+            // Auto-detect TTY so piping to a file or CI log strips ANSI.
+            // Honour --no-color as an override.
+            let stdoutIsTTY = isatty(fileno(stdout)) != 0
+            reporter = TerminalReporter(useColour: stdoutIsTTY && !noColor)
+        case .json:
+            reporter = JSONReporter()
+        case .html:
+            reporter = HTMLReporter()
+        }
+        let report = reporter.render(result)
         print(report)
     }
 }
