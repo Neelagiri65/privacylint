@@ -1,6 +1,6 @@
 # PrivacyLint — HANDOFF
 
-_Last updated: 2026-06-08 (v0.1.0 tagged, Homebrew formula + ITMS-91053 blog post drafted; awaiting publication)_
+_Last updated: 2026-06-08 (**LAUNCHED** — public repos, release, Homebrew tap, brew-installed binary, real-app finding all live)_
 
 ## What this is
 A Swift CLI that scans iOS/macOS Xcode projects for App Store privacy
@@ -31,8 +31,13 @@ no competitor checks.
 - HTML reporter still a stub — parked per revised priority (post-launch nice-to-have).
 - **`8a648a2 release: v0.1.0 — first launchable version`** — CLI version bumped 0.0.1 → 0.1.0, tag `v0.1.0` created locally. Homebrew formula drafted at `dist/homebrew/privacylint.rb` with a non-trivial test block that creates a Required-Reason fixture, asserts scanner detection AND `ITMS-91053` in output AND non-zero exit. `dist/homebrew/README-tap.md` is the README the `homebrew-privacylint` tap repo will use. **`RELEASE.md`** is the full runbook: pre-flight gh commands to create both repos, tarball SHA hashing, tap-repo formula bump, smoke-install verification.
 - **`aae0157 docs: draft ITMS-91053 blog post for nativerse-ventures.com`** — `dist/blog/itms-91053-missing-api-declaration.md`. ~1,300 words. Structured as the answer to a panic Google search: opens with the verbatim Apple rejection email, gives the complete manual fix (XML + reason-code table), then the three traps that defeat the manual fix (transitive deps / SDK manifests / wrong content), only THEN reveals PrivacyLint with verbatim CLI output from `/tmp/pl-itms-91053` and `/tmp/pl-firebase`. brew install one-liner + GitHub Actions snippet + the "report a missing SDK match" issue link. British English; senior-dev-to-peer tone; SEO keywords audited (`ITMS-91053` x10, `PrivacyInfo.xcprivacy` x8, `NSPrivacy*` x18, all natural). Ready to drop into the publishing pipeline alongside the tap publication.
-- **Nothing pushed to GitHub yet.** Tag is local; no `origin` remote on this repo. The runbook in `RELEASE.md` has the gh commands ready — user runs them when ready to ship publicly. Blog post is ready to publish the same hour the tap goes live.
-- `swift build` ✅ (release), `swift test` ✅ (119 tests).
+- **LAUNCHED (this turn).** Public repos created, code pushed, v0.1.0 release cut, Homebrew tap published, brew install verified producing a working binary.
+  - https://github.com/Neelagiri65/privacylint (main repo, master pushed, v0.1.0 tag pushed, GitHub release at /releases/tag/v0.1.0)
+  - https://github.com/Neelagiri65/homebrew-privacylint (tap repo, Formula/privacylint.rb with sha256 `2d092c02aa0bb0c223c9463838535dda81c52b0f86528be78eae031f4598b2cd`)
+  - `/opt/homebrew/bin/privacylint` — 0.1.0, exits 1 on errors as designed.
+- **Real-app finding on IceCubesApp** (Mastodon iOS, SwiftUI, popular open-source) — 1 ITMS-91053 blocking error (no PrivacyInfo.xcprivacy in the repo) + 19 Required-Reason warnings across 12 files. Captured to `dist/launch/icecubes-scan.txt`. Honest caveat: some `creationDate` warnings are SwiftData @Attribute false positives — documented in the Reddit post and the v2 roadmap.
+- **`b805684 docs(launch): real-app finding…`** — Reddit (r/iOSProgramming) and Swift Forums post drafts saved to `dist/launch/`. Blog post saved to `dist/blog/itms-91053-missing-api-declaration.md`.
+- **What Claude did NOT do**: publish the blog post to nativerse-ventures.com (no API access to your site); post on Reddit / Swift Forums (deliberately user-side — accounts, voice, response handling).
 
 ## Project principles (load-bearing — apply to every scanner)
 - **Position naturally to Apple devs in pain.** Lead with the rejection code they Googled (`ITMS-91053`, `ITMS-91061`, `Guideline 5.1.1`). Name the likely culprit dependency when we know it. Give a fix-it line, not a diagnosis. Never use "compliance" where "what App Review will block" works.
@@ -59,9 +64,12 @@ Tests/PrivacyLintCoreTests/ one test per scanner + registry tests
 ## NEXT
 **One push and one blog post from launchable.** The user runs the gh commands in `RELEASE.md` when ready — Claude has not pushed anything to GitHub. See `RELEASE.md` for verbatim commands.
 
-1. **Publish the tap** — `RELEASE.md` runbook. Creates `Neelagiri65/privacylint` + `Neelagiri65/homebrew-privacylint`, cuts v0.1.0, smoke-installs via `brew install`.
-2. **Publish the blog post** — drop `dist/blog/itms-91053-missing-api-declaration.md` into the nativerse-ventures.com pipeline the same hour the tap goes live. Distribute on r/iOSProgramming, Indie Dev Monday, Swift Forums.
-3. **Show HN** — once the blog post is indexed. Pick one well-known open-source iOS app, run PrivacyLint, post the output. Lead with the most concrete finding.
+1. ~~Publish the tap~~ ✅ done — https://github.com/Neelagiri65/privacylint and https://github.com/Neelagiri65/homebrew-privacylint live.
+2. **Publish the blog post** — drop `dist/blog/itms-91053-missing-api-declaration.md` into nativerse-ventures.com. Once URL is known, update the Reddit draft (`dist/launch/reddit-r-iOSProgramming.md`) where it says `[link once published]`.
+3. **Post Reddit + Swift Forums** — drafts in `dist/launch/`. r/iOSProgramming, r/IndieDevs / Indie Dev Monday, swift.org/forums. The IceCubesApp finding is the credibility hook — leads with a real rejection caught in a real app.
+4. **PR to IceCubesApp** maintainers — the missing `PrivacyInfo.xcprivacy` is a real submission-blocker for their next release. Filing the PR gives PrivacyLint a public reference proving a finding in a recognisable codebase.
+5. **Show HN** — once the blog post has 24-48h on Reddit. The terminal-output screenshot is the hook; PrivacyLint position is "indie dev tool, MIT, no telemetry, runs locally."
+6. **Week-1 metrics to watch (per launch advice)**: GitHub stars (social proof for Show HN) + "missing SDK match" issues filed (proves real developer usage). Everything else is noise.
 4. **HTML reporter** — post-launch nice-to-have. Same data shape; standalone HTML; inline CSS; for CI artifact uploads.
 5. **`mint install`** — alternative install path; minor.
 6. **v2 — ASC integration** (`privacylint connect validate-against-asc`) — the subscription-justifying differentiator. Keychain entry `apple-app-store-connect`, keys at `~/.appstoreconnect/private_keys/`.
