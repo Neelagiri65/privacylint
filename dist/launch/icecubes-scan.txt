@@ -1,0 +1,182 @@
+PrivacyLint v0.1.0  ·  /tmp/pl-real-apps/IceCubesApp
+Platforms: iOS, macOS
+
+[required-reason-api] Required Reason API usage
+✓ passed · 19 warnings
+
+  warning  IceCubesApp/App/Main/AppView.swift:36:31
+           Use of `creationDate` triggers Apple's
+           `NSPrivacyAccessedAPICategoryFileTimestamp` requirement.
+           fix-it: Declare one of [DDA9.1, C617.1, 3B52.1, 0A2A.1] for
+           NSPrivacyAccessedAPICategoryFileTimestamp in your
+           PrivacyInfo.xcprivacy, or remove the call. Apple cites this in
+           ITMS-91053 rejections.
+
+  warning  IceCubesApp/App/Main/AppView.swift:37:26
+           Use of `creationDate` triggers Apple's
+           `NSPrivacyAccessedAPICategoryFileTimestamp` requirement.
+           fix-it: Declare one of [DDA9.1, C617.1, 3B52.1, 0A2A.1] for
+           NSPrivacyAccessedAPICategoryFileTimestamp in your
+           PrivacyInfo.xcprivacy, or remove the call. Apple cites this in
+           ITMS-91053 rejections.
+
+  warning  IceCubesApp/App/Main/IceCubesApp.swift:42:7
+           Use of `UserDefaults` triggers Apple's
+           `NSPrivacyAccessedAPICategoryUserDefaults` requirement.
+           fix-it: Declare one of [CA92.1, 1C8F.1, C56D.1, AC6B.1] for
+           NSPrivacyAccessedAPICategoryUserDefaults in your
+           PrivacyInfo.xcprivacy, or remove the call. Apple cites this in
+           ITMS-91053 rejections.
+
+  warning  IceCubesApp/App/Tabs/Settings/RemoteTimelinesSettingView.swift:13:31
+           Use of `creationDate` triggers Apple's
+           `NSPrivacyAccessedAPICategoryFileTimestamp` requirement.
+           fix-it: Declare one of [DDA9.1, C617.1, 3B52.1, 0A2A.1] for
+           NSPrivacyAccessedAPICategoryFileTimestamp in your
+           PrivacyInfo.xcprivacy, or remove the call. Apple cites this in
+           ITMS-91053 rejections.
+
+  warning  IceCubesApp/App/Tabs/Settings/TagsGroupSettingView.swift:13:26
+           Use of `creationDate` triggers Apple's
+           `NSPrivacyAccessedAPICategoryFileTimestamp` requirement.
+           fix-it: Declare one of [DDA9.1, C617.1, 3B52.1, 0A2A.1] for
+           NSPrivacyAccessedAPICategoryFileTimestamp in your
+           PrivacyInfo.xcprivacy, or remove the call. Apple cites this in
+           ITMS-91053 rejections.
+
+  warning  IceCubesApp/App/Tabs/Timeline/TimelineTab.swift:30:31
+           Use of `creationDate` triggers Apple's
+           `NSPrivacyAccessedAPICategoryFileTimestamp` requirement.
+           fix-it: Declare one of [DDA9.1, C617.1, 3B52.1, 0A2A.1] for
+           NSPrivacyAccessedAPICategoryFileTimestamp in your
+           PrivacyInfo.xcprivacy, or remove the call. Apple cites this in
+           ITMS-91053 rejections.
+
+  warning  IceCubesApp/App/Tabs/Timeline/TimelineTab.swift:31:26
+           Use of `creationDate` triggers Apple's
+           `NSPrivacyAccessedAPICategoryFileTimestamp` requirement.
+           fix-it: Declare one of [DDA9.1, C617.1, 3B52.1, 0A2A.1] for
+           NSPrivacyAccessedAPICategoryFileTimestamp in your
+           PrivacyInfo.xcprivacy, or remove the call. Apple cites this in
+           ITMS-91053 rejections.
+
+  warning  Packages/Env/Sources/Env/UserPreferences.swift:88:27
+           Use of `UserDefaults` triggers Apple's
+           `NSPrivacyAccessedAPICategoryUserDefaults` requirement.
+           fix-it: Declare one of [CA92.1, 1C8F.1, C56D.1, AC6B.1] for
+           NSPrivacyAccessedAPICategoryUserDefaults in your
+           PrivacyInfo.xcprivacy, or remove the call. Apple cites this in
+           ITMS-91053 rejections.
+
+  warning  Packages/Env/Sources/Env/UserPreferences.swift:109:37
+           Use of `UserDefaults` triggers Apple's
+           `NSPrivacyAccessedAPICategoryUserDefaults` requirement.
+           fix-it: Declare one of [CA92.1, 1C8F.1, C56D.1, AC6B.1] for
+           NSPrivacyAccessedAPICategoryUserDefaults in your
+           PrivacyInfo.xcprivacy, or remove the call. Apple cites this in
+           ITMS-91053 rejections.
+
+  warning  Packages/Models/Sources/Models/SwiftData/Draft.swift:11:5
+           Use of `creationDate` triggers Apple's
+           `NSPrivacyAccessedAPICategoryFileTimestamp` requirement.
+           fix-it: Declare one of [DDA9.1, C617.1, 3B52.1, 0A2A.1] for
+           NSPrivacyAccessedAPICategoryFileTimestamp in your
+           PrivacyInfo.xcprivacy, or remove the call. Apple cites this in
+           ITMS-91053 rejections.
+
+  warning  Packages/Models/Sources/Models/SwiftData/LocalTimeline.swift:11:5
+           Use of `creationDate` triggers Apple's
+           `NSPrivacyAccessedAPICategoryFileTimestamp` requirement.
+           fix-it: Declare one of [DDA9.1, C617.1, 3B52.1, 0A2A.1] for
+           NSPrivacyAccessedAPICategoryFileTimestamp in your
+           PrivacyInfo.xcprivacy, or remove the call. Apple cites this in
+           ITMS-91053 rejections.
+
+  warning  Packages/Models/Sources/Models/SwiftData/TagGroup.swift:15:5
+           Use of `creationDate` triggers Apple's
+           `NSPrivacyAccessedAPICategoryFileTimestamp` requirement.
+           fix-it: Declare one of [DDA9.1, C617.1, 3B52.1, 0A2A.1] for
+           NSPrivacyAccessedAPICategoryFileTimestamp in your
+           PrivacyInfo.xcprivacy, or remove the call. Apple cites this in
+           ITMS-91053 rejections.
+
+  warning  Packages/StatusKit/Sources/StatusKit/Editor/Drafts/DraftsListView.swift:13:25
+           Use of `creationDate` triggers Apple's
+           `NSPrivacyAccessedAPICategoryFileTimestamp` requirement.
+           fix-it: Declare one of [DDA9.1, C617.1, 3B52.1, 0A2A.1] for
+           NSPrivacyAccessedAPICategoryFileTimestamp in your
+           PrivacyInfo.xcprivacy, or remove the call. Apple cites this in
+           ITMS-91053 rejections.
+
+  warning  Packages/StatusKit/Sources/StatusKit/Editor/Drafts/DraftsListView.swift:30:28
+           Use of `creationDate` triggers Apple's
+           `NSPrivacyAccessedAPICategoryFileTimestamp` requirement.
+           fix-it: Declare one of [DDA9.1, C617.1, 3B52.1, 0A2A.1] for
+           NSPrivacyAccessedAPICategoryFileTimestamp in your
+           PrivacyInfo.xcprivacy, or remove the call. Apple cites this in
+           ITMS-91053 rejections.
+
+  warning  Packages/Timeline/Sources/Timeline/View/TimelineToolbarTagGroupButton.swift:8:26
+           Use of `creationDate` triggers Apple's
+           `NSPrivacyAccessedAPICategoryFileTimestamp` requirement.
+           fix-it: Declare one of [DDA9.1, C617.1, 3B52.1, 0A2A.1] for
+           NSPrivacyAccessedAPICategoryFileTimestamp in your
+           PrivacyInfo.xcprivacy, or remove the call. Apple cites this in
+           ITMS-91053 rejections.
+
+  warning  Packages/Timeline/Sources/Timeline/actors/TimelineCache.swift:86:7
+           Use of `UserDefaults` triggers Apple's
+           `NSPrivacyAccessedAPICategoryUserDefaults` requirement.
+           fix-it: Declare one of [CA92.1, 1C8F.1, C56D.1, AC6B.1] for
+           NSPrivacyAccessedAPICategoryUserDefaults in your
+           PrivacyInfo.xcprivacy, or remove the call. Apple cites this in
+           ITMS-91053 rejections.
+
+  warning  Packages/Timeline/Sources/Timeline/actors/TimelineCache.swift:88:7
+           Use of `UserDefaults` triggers Apple's
+           `NSPrivacyAccessedAPICategoryUserDefaults` requirement.
+           fix-it: Declare one of [CA92.1, 1C8F.1, C56D.1, AC6B.1] for
+           NSPrivacyAccessedAPICategoryUserDefaults in your
+           PrivacyInfo.xcprivacy, or remove the call. Apple cites this in
+           ITMS-91053 rejections.
+
+  warning  Packages/Timeline/Sources/Timeline/actors/TimelineCache.swift:95:7
+           Use of `UserDefaults` triggers Apple's
+           `NSPrivacyAccessedAPICategoryUserDefaults` requirement.
+           fix-it: Declare one of [CA92.1, 1C8F.1, C56D.1, AC6B.1] for
+           NSPrivacyAccessedAPICategoryUserDefaults in your
+           PrivacyInfo.xcprivacy, or remove the call. Apple cites this in
+           ITMS-91053 rejections.
+
+  warning  Packages/Timeline/Sources/Timeline/actors/TimelineCache.swift:97:7
+           Use of `UserDefaults` triggers Apple's
+           `NSPrivacyAccessedAPICategoryUserDefaults` requirement.
+           fix-it: Declare one of [CA92.1, 1C8F.1, C56D.1, AC6B.1] for
+           NSPrivacyAccessedAPICategoryUserDefaults in your
+           PrivacyInfo.xcprivacy, or remove the call. Apple cites this in
+           ITMS-91053 rejections.
+
+[third-party-sdk-manifest] Third-party SDK privacy manifests
+✓ passed
+
+[privacy-manifest-validation] Privacy manifest validation
+✗ failed · 1 error
+
+    error  IceCubesApp/App/Main/AppView.swift:36:31
+           Your project uses Required Reason APIs
+           (NSPrivacyAccessedAPICategoryFileTimestamp,
+           NSPrivacyAccessedAPICategoryUserDefaults) but contains no
+           PrivacyInfo.xcprivacy. App Review will reject this with ITMS-91053.
+           fix-it: Add a PrivacyInfo.xcprivacy file to your main bundle and
+           declare an NSPrivacyAccessedAPITypes entry for each category listed
+           above.
+
+[tracking-domain-declaration] Tracking domain declarations
+✓ passed
+
+[ai-consent] AI service consent
+✓ passed
+
+Summary
+  ✗ 1 failed   ✓ 4 passed   ·   errors: 1   warnings: 19
+  Status: FAILED — App Review will block the next submission until the errors are fixed.
