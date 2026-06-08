@@ -1,6 +1,6 @@
 # PrivacyLint — HANDOFF
 
-_Last updated: 2026-06-08_
+_Last updated: 2026-06-08 (post file-discovery)_
 
 ## What this is
 A Swift CLI that scans iOS/macOS Xcode projects for App Store privacy
@@ -15,10 +15,12 @@ no competitor checks.
 - Others (stelabouras, Wooder, techinpark, crasowas) = grep-based, stuck on May-2024 rules, unmaintained. Metadata scanners (AcceptMyApp etc.) don't read source.
 - **Risk:** if the rules engine isn't maintained monthly, the tool dies like the 2024 CLIs.
 
-## Current state — Step 1 (scaffold) COMPLETE ✅
-Committed: `5e218c3 chore: scaffold PrivacyLint CLI project structure` (27 files).
-- `swift build` ✅ (Swift 6.3.2), `swift test` ✅ (11/11 pass), `swift run privacylint --path . --format terminal` ✅.
-- Architecture only — **no scanning logic implemented**. Every scanner throws `ScannerError.notImplemented`; `RuleRegistry.run` skips those, so the pipeline runs end-to-end with empty output.
+## Current state — Step 1 (scaffold) COMPLETE ✅, Step 2 (file discovery) COMPLETE ✅
+- `5e218c3` scaffold (27 files).
+- `f19e324 feat: add ProjectDiscovery to populate ScanContext` — directory walker that classifies Swift production / Swift test (convention: `*Tests`, `*UITests`) / Objective-C / dependency manifests / `PrivacyInfo.xcprivacy`. Excludes `.build`, `DerivedData`, `Pods`, `Carthage`, `.git`, `.swiftpm`, `.claude`, `fastlane`, `website`, `*.xcodeproj`, `*.xcworkspace`. `ScanContext` extended with `testFiles` and `objcFiles`. 11 tests, all pass.
+- Gotcha fixed mid-session: original exclusion logic used `firstComponent` of a string-subtracted relative path. macOS `/var/folders/...` ↔ `/private/var/folders/...` symlink meant the subtraction produced wrong components and `.build`/`Pods` leaked through. Fixed by resolving symlinks + comparing every component, not just the first.
+- `swift build` ✅ (Swift 6.3.2), `swift test` ✅ (all suites pass).
+- Scanner logic still **not** implemented — every scanner throws `ScannerError.notImplemented`; pipeline runs end-to-end with empty output but now over real discovered files.
 
 ## Key decisions made
 - Protocol renamed `Scanner` → **`ComplianceScanner`** to avoid colliding with `Foundation.Scanner` (a real class). Important — keep this name.
@@ -38,9 +40,9 @@ Tests/PrivacyLintCoreTests/ one test per scanner + registry tests
 
 ## NEXT
 1. **User reviews the architecture** before engine work begins (explicitly requested).
-2. Then, before any AST code: run `/research-first` on the SwiftSyntax API (per session rules).
-3. Build scanners in order, each test-first: RequiredReasonAPIScanner (SwiftSyntax visitor → detect triggering symbols, ignore comments/test targets) → DependencyResolver (parse Package.swift/Podfile → cross-ref ThirdPartySDKList) → PrivacyManifestValidator (parse `.xcprivacy` plist → reconcile reasons vs usage) → TrackingDomainChecker → AIConsentDetector.
-4. Add the file-discovery logic that populates `ScanContext` (currently empty).
+2. Wire `ProjectDiscovery.discover(at:)` into `PrivacyLintCommand` so the CLI actually passes a populated `ScanContext` to `RuleRegistry.run` (currently the CLI likely still builds an empty context — verify).
+3. Before any AST code: run `/research-first` on the SwiftSyntax API (per session rules).
+4. Build scanners in order, each test-first: RequiredReasonAPIScanner (SwiftSyntax visitor → detect triggering symbols, ignore comments/test targets) → DependencyResolver (parse Package.swift/Podfile → cross-ref ThirdPartySDKList) → PrivacyManifestValidator (parse `.xcprivacy` plist → reconcile reasons vs usage) → TrackingDomainChecker → AIConsentDetector.
 
 ## Notes / open items
 - No git remote yet — commits are local only. Add a remote before relying on push.
